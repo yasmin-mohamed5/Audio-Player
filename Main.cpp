@@ -1,5 +1,5 @@
 #include <JuceHeader.h>
-#include "MainComponent.h"
+#include "Player.h"
 
 // Our application class
 class SimpleAudioPlayer : public juce::JUCEApplication
@@ -30,8 +30,9 @@ private:
                 DocumentWindow::allButtons)
         {
             setUsingNativeTitleBar(true);
-            setContentOwned(new MainComponent(), true); // MainComponent = our UI + logic
-            centreWithSize(400, 200);
+            setContentOwned(new Player(), true); // MainComponent = our UI + logic
+            centreWithSize(700, 500);
+            setResizable(true, true);
             setVisible(true);
         }
 
@@ -45,4 +46,5 @@ private:
 };
 
 // This macro starts the app
+
 START_JUCE_APPLICATION(SimpleAudioPlayer)
