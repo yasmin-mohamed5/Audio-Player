@@ -147,7 +147,7 @@ void Player::buttonClicked(juce::Button* button)
             volumeSlider.setValue(0.0, juce::dontSendNotification);
             isMuted = true;
             muteButton.setButtonText("Unmute");
-            DBG("Muted, previousGain=" << previousGain);
+
         }
         else
         {
