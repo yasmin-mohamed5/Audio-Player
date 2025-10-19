@@ -63,9 +63,10 @@ void Player::resized()
     restartButton.setBounds(x, y, z, h); x += z + gap;
     stopButton.setBounds(x, y, z, h); x += z + gap;
     startButton.setBounds(x, y, z, h); x += z + gap;
-    endButton.setBounds(x, y, z, h); x += z + gap;
+    muteButton.setBounds(x, y, z, h); x += z + gap;
     loopButton.setBounds(x, y, z, h); x += z + gap;
-    muteButton.setBounds(x, y, z, h);
+    endButton.setBounds(x, y, z, h); x += z + gap;
+
 
 
     volumeSlider.setBounds(20, 100, getWidth() - 40, 30);
