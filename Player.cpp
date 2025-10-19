@@ -159,6 +159,12 @@ void Player::buttonClicked(juce::Button* button)
     }
     else if (button == &loopButton) {
         is_restart = !is_restart;
+        if (is_restart) {
+            loopButton.setButtonText("Looping");
+        }
+        else {
+            loopButton.setButtonText("Loop");
+        }
     }
 
 

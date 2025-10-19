@@ -8,8 +8,7 @@ class Player : public juce::AudioAppComponent,
 {
 public:
     Player();
-    ~Player() override;
-    bool is_restart;
+    ~Player() override; 
 
     void paint(juce::Graphics& g) override;
     void resized() override;
@@ -41,6 +40,7 @@ private:
     juce::TextButton endButton{ "►|" };
     juce::TextButton stopButton{ "Stop" };
     juce::TextButton loopButton{ "Loop" };
+    bool is_restart;
     juce::TextButton muteButton{ "Mute" };
     bool isMuted = false;
     float previousGain = 0.5f;
