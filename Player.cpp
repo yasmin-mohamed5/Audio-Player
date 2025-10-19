@@ -4,11 +4,11 @@ Player::Player()
 {
     formatManager.registerBasicFormats();
 
-    for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton})
+    for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton,&muteButton, &loopButton})
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
-    }
+    }previousGain = 0.5f;
 
     volumeSlider.setRange(0.0, 1.0, 0.01);
     volumeSlider.setValue(0.5); // start from 50% of the value
@@ -21,6 +21,7 @@ Player::Player()
 
     startTimer(200);//each 200 ms
     setAudioChannels(0, 2);
+    is_restart = false;
 }
 
 Player::~Player() {
@@ -63,6 +64,8 @@ void Player::resized()
     stopButton.setBounds(x, y, z, h); x += z + gap;
     startButton.setBounds(x, y, z, h); x += z + gap;
     endButton.setBounds(x, y, z, h);
+    muteButton.setBounds(x, y, z, h);
+    loopButton.setBounds(x, y, z, h); x += z + gap;
 
     volumeSlider.setBounds(20, 100, getWidth() - 40, 30);
     timeSlider.setBounds(20, 140, getWidth() - 40, 30);  // y axis is 140 to be under the value slider
@@ -72,7 +75,8 @@ void Player::buttonClicked(juce::Button* button)
 {
     if (button == &loadButton){
         fileChooser = std::make_unique<juce::FileChooser>(
-            "Select an audio file...",
+            "Select an audio file...",\
+
             juce::File{},
             "*.wav;*.mp3");
         fileChooser->launchAsync(
@@ -133,23 +137,64 @@ void Player::buttonClicked(juce::Button* button)
             transportSource.setPosition(lengthInSeconds); // jump to end
         }
     }
+    else if (button == &muteButton)
+    {
+        if (!isMuted)
+        {
+            previousGain = (float)volumeSlider.getValue();
+            transportSource.setGain(0.0f);
+            volumeSlider.setValue(0.0, juce::dontSendNotification);
+            isMuted = true;
+            muteButton.setButtonText("Unmute");
+            DBG("Muted, previousGain=" << previousGain);
+        }
+        else
+        {
+            transportSource.setGain(previousGain);
+            volumeSlider.setValue(previousGain, juce::dontSendNotification);
+            isMuted = false;
+            muteButton.setButtonText("Mute");
+        }
+    }
+    else if (button == &loopButton) {
+        is_restart = !is_restart;
+    }
+
+
 }
 
 void Player::sliderValueChanged(juce::Slider* slider)
 {
     if (slider == &volumeSlider) {
-        transportSource.setGain((float)slider->getValue());
+        float v = (float)slider->getValue();
+        transportSource.setGain(v);
+
+        if (v > 0.001f) {
+            previousGain = v;
+            isMuted = false;
+            muteButton.setButtonText("Mute");
+        } else {
+            isMuted = true;
+            muteButton.setButtonText("Unmute");
+        }
     }
     else if (slider == &timeSlider) {
         transportSource.setPosition((float)slider->getValue());
     }
 }
 
+
 void Player::timerCallback()
 {
     // update the time slider to reflect current playback position
     if (readerSource != nullptr){
         double pos = transportSource.getCurrentPosition();
+        double lengthInSeconds = transportSource.getLengthInSeconds();
+        if (is_restart && pos >= lengthInSeconds - 0.001) { // to avoid cut the last second 
+            transportSource.setPosition(0.0);
+            transportSource.start();
+            pos = transportSource.getCurrentPosition();
+        }
         // update the GUI time slider
         timeSlider.setValue(pos, juce::dontSendNotification);
     }
