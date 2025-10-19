@@ -21,7 +21,7 @@ public:
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill);
     void releaseResources();
-
+    
     // Time
     void timerCallback() override;
 
