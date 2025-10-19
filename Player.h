@@ -3,7 +3,8 @@
 
 class Player : public juce::AudioAppComponent,
     public juce::Button::Listener,
-    public juce::Slider::Listener
+    public juce::Slider::Listener,
+    public juce::Timer
 {
 public:
     Player();
@@ -21,6 +22,9 @@ public:
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill);
     void releaseResources();
 
+    // Time
+    void timerCallback() override;
+
 private:
     // Audio
     juce::AudioFormatManager formatManager;
@@ -36,6 +40,7 @@ private:
     juce::TextButton endButton{ "►|" };
     juce::TextButton stopButton{ "Stop" };
     juce::Slider volumeSlider;
+    juce::Slider timeSlider;
 
     std::unique_ptr<juce::FileChooser> fileChooser;
 

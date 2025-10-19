@@ -1,4 +1,4 @@
-#include "Player.h"
+﻿#include "Player.h"
 
 Player::Player()
 {
@@ -11,14 +11,20 @@ Player::Player()
     }
 
     volumeSlider.setRange(0.0, 1.0, 0.01);
-    volumeSlider.setValue(0.5);
+    volumeSlider.setValue(0.5); // start from 50% of the value
     volumeSlider.addListener(this);
+    timeSlider.addListener(this);
+    timeSlider.setRange(0.0, 1.0, 0.01);
+    timeSlider.setValue(0.0); //start from time: 0.0 sec
     addAndMakeVisible(volumeSlider);
+    addAndMakeVisible(timeSlider);
 
+    startTimer(200);//each 200 ms
     setAudioChannels(0, 2);
 }
 
 Player::~Player() {
+    stopTimer();
     shutdownAudio();
 }
 
@@ -59,6 +65,7 @@ void Player::resized()
     endButton.setBounds(x, y, z, h);
 
     volumeSlider.setBounds(20, 100, getWidth() - 40, 30);
+    timeSlider.setBounds(20, 140, getWidth() - 40, 30);  // y axis is 140 to be under the value slider
 }
 
 void Player::buttonClicked(juce::Button* button)
@@ -90,6 +97,14 @@ void Player::buttonClicked(juce::Button* button)
                             0,
                             nullptr,
                             reader->sampleRate);
+                        double lengthInSeconds = transportSource.getLengthInSeconds();
+                        if (lengthInSeconds > 0.0){
+                            timeSlider.setRange(0.0, lengthInSeconds, 0.01); // set rage in seconds to the slider
+                        }
+                        else{
+                            timeSlider.setRange(0.0, 1.0, 0.01); 
+                        }
+                        timeSlider.setValue(0.0, juce::dontSendNotification);
                         transportSource.start();
                     }
                 }
@@ -122,6 +137,20 @@ void Player::buttonClicked(juce::Button* button)
 
 void Player::sliderValueChanged(juce::Slider* slider)
 {
-    if (slider == &volumeSlider)
+    if (slider == &volumeSlider) {
         transportSource.setGain((float)slider->getValue());
+    }
+    else if (slider == &timeSlider) {
+        transportSource.setPosition((float)slider->getValue());
+    }
+}
+
+void Player::timerCallback()
+{
+    // update the time slider to reflect current playback position
+    if (readerSource != nullptr){
+        double pos = transportSource.getCurrentPosition();
+        // update the GUI time slider
+        timeSlider.setValue(pos, juce::dontSendNotification);
+    }
 }

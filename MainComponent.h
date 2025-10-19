@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <JuceHeader.h>
 #include <vector>
@@ -31,9 +31,13 @@ private:
     juce::AudioTransportSource transportSource;
 
     // GUI Controls
-    juce::TextButton loadButton { "Load Files" };
-    juce::TextButton restartButton { "Restart" };
-    juce::TextButton stopButton { "Stop" };
+    juce::TextButton loadButton{ "Load" };
+    juce::TextButton playButton{ "Play ►" };
+    juce::TextButton pauseButton{ "Pause ||" };
+    juce::TextButton restartButton{ "Restart" };
+    juce::TextButton startButton{ "|◄" };
+    juce::TextButton endButton{ "►|" };
+    juce::TextButton stopButton{ "Stop" };
     juce::Slider volumeSlider;
 
     //void loadTrack(const juce::File& file);

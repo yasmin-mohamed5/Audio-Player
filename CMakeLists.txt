@@ -62,6 +62,8 @@ target_sources(GuiAppExample
         Main.cpp
         MainComponent.cpp
         MainComponent.h
+        Player.cpp
+        Player.h
         )
 
 # `target_compile_definitions` adds some preprocessor definitions to our target. In a Projucer

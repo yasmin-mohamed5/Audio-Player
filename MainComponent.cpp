@@ -25,7 +25,7 @@ MainComponent::~MainComponent()
 {
     shutdownAudio();
 }
-
+ 
 void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
     transportSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
@@ -101,13 +101,17 @@ void MainComponent::buttonClicked(juce::Button* button)
 
     if (button == &restartButton)
     {
+        transportSource.setPosition(0.0);
         transportSource.start();
     }
 
     if (button == &stopButton)
     {
         transportSource.stop();
-        transportSource.setPosition(0.0);
+        //transportSource.setPosition(0.0);
+    }
+    if (button == &pauseButton) {
+        transportSource.stop();
     }
 
 }
