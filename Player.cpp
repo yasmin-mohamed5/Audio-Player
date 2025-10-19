@@ -1,10 +1,10 @@
-﻿#include "Player.h"
+#include"Player.h"
 
 Player::Player()
 {
     formatManager.registerBasicFormats();
 
-    for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton, &muteButton, &loopButton})
+    for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton, &muteButton, &loopButton })
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -63,8 +63,8 @@ void Player::resized()
     restartButton.setBounds(x, y, z, h); x += z + gap;
     stopButton.setBounds(x, y, z, h); x += z + gap;
     startButton.setBounds(x, y, z, h); x += z + gap;
+    endButton.setBounds(x, y, z, h); x += z + gap;
     loopButton.setBounds(x, y, z, h); x += z + gap;
-    endButton.setBounds(x, y, z, h);
     muteButton.setBounds(x, y, z, h);
 
 
@@ -74,9 +74,9 @@ void Player::resized()
 
 void Player::buttonClicked(juce::Button* button)
 {
-    if (button == &loadButton){
+    if (button == &loadButton) {
         fileChooser = std::make_unique<juce::FileChooser>(
-            "Select an audio file...",\
+            "Select an audio file...", \
 
             juce::File{},
             "*.wav;*.mp3");
@@ -103,10 +103,10 @@ void Player::buttonClicked(juce::Button* button)
                             nullptr,
                             reader->sampleRate);
                         double lengthInSeconds = transportSource.getLengthInSeconds();
-                        if (lengthInSeconds > 0.0){
+                        if (lengthInSeconds > 0.0) {
                             timeSlider.setRange(0.0, lengthInSeconds, 0.01); // set rage in seconds to the slider
                         }
-                        else{
+                        else {
                             timeSlider.setRange(0.0, 1.0, 0.01);
                         }
                         timeSlider.setValue(0.0, juce::dontSendNotification);
@@ -147,7 +147,7 @@ void Player::buttonClicked(juce::Button* button)
             volumeSlider.setValue(0.0, juce::dontSendNotification);
             isMuted = true;
             muteButton.setButtonText("Unmute");
-
+            DBG("Muted, previousGain=" << previousGain);
         }
         else
         {
@@ -174,7 +174,8 @@ void Player::sliderValueChanged(juce::Slider* slider)
             previousGain = v;
             isMuted = false;
             muteButton.setButtonText("Mute");
-        } else {
+        }
+        else {
             isMuted = true;
             muteButton.setButtonText("Unmute");
         }
@@ -188,7 +189,7 @@ void Player::sliderValueChanged(juce::Slider* slider)
 void Player::timerCallback()
 {
     // update the time slider to reflect current playback position
-    if (readerSource != nullptr){
+    if (readerSource != nullptr) {
         double pos = transportSource.getCurrentPosition();
         double lengthInSeconds = transportSource.getLengthInSeconds();
         if (is_restart && pos >= lengthInSeconds - 0.001) { // to avoid cut the last second 
