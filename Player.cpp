@@ -4,7 +4,7 @@ Player::Player()
 {
     formatManager.registerBasicFormats();
 
-    for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton,&muteButton, &loopButton})
+    for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton, &muteButton, &loopButton})
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -63,9 +63,10 @@ void Player::resized()
     restartButton.setBounds(x, y, z, h); x += z + gap;
     stopButton.setBounds(x, y, z, h); x += z + gap;
     startButton.setBounds(x, y, z, h); x += z + gap;
+    loopButton.setBounds(x, y, z, h); x += z + gap;
     endButton.setBounds(x, y, z, h);
     muteButton.setBounds(x, y, z, h);
-    loopButton.setBounds(x, y, z, h); x += z + gap;
+
 
     volumeSlider.setBounds(20, 100, getWidth() - 40, 30);
     timeSlider.setBounds(20, 140, getWidth() - 40, 30);  // y axis is 140 to be under the value slider

@@ -40,8 +40,8 @@ private:
     juce::TextButton startButton{ "|◄" };
     juce::TextButton endButton{ "►|" };
     juce::TextButton stopButton{ "Stop" };
-    juce::TextButton muteButton{ "Mute" };
     juce::TextButton loopButton{ "Loop" };
+    juce::TextButton muteButton{ "Mute" };
     bool isMuted = false;
     float previousGain = 0.5f;
     juce::Slider volumeSlider;
