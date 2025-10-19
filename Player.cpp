@@ -102,7 +102,7 @@ void Player::buttonClicked(juce::Button* button)
                             timeSlider.setRange(0.0, lengthInSeconds, 0.01); // set rage in seconds to the slider
                         }
                         else{
-                            timeSlider.setRange(0.0, 1.0, 0.01); 
+                            timeSlider.setRange(0.0, 1.0, 0.01);
                         }
                         timeSlider.setValue(0.0, juce::dontSendNotification);
                         transportSource.start();
