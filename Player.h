@@ -8,7 +8,7 @@ class Player : public juce::AudioAppComponent,
 {
 public:
     Player();
-    ~Player() override; 
+    ~Player() override;
 
     void paint(juce::Graphics& g) override;
     void resized() override;
@@ -21,7 +21,7 @@ public:
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill);
     void releaseResources();
-    
+
     // Time
     void timerCallback() override;
 
@@ -46,6 +46,7 @@ private:
     float previousGain = 0.5f;
     juce::Slider volumeSlider;
     juce::Slider timeSlider;
+    juce::Label metadataLable;
 
     std::unique_ptr<juce::FileChooser> fileChooser;
 
