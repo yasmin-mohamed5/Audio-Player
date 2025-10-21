@@ -17,7 +17,7 @@ Player::Player()
     timeSlider.setRange(0.0, 1.0, 0.01);
     timeSlider.setValue(0.0); //start from time: 0.0 sec
     speedSlider.addListener(this);
-    speedSlider.setRange(0.5, 3.0, 0.1);
+    speedSlider.setRange(0.25, 2.0, 0.01);
     speedSlider.setValue(1.0); //start from time: 0.0 sec
     addAndMakeVisible(volumeSlider);
     addAndMakeVisible(timeSlider);
