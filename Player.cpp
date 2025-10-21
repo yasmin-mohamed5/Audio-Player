@@ -13,16 +13,20 @@ Player::Player()
     volumeSlider.setRange(0.0, 1.0, 0.01);
     volumeSlider.setValue(0.5); // start from 50% of the value
     volumeSlider.addListener(this);
+
     timeSlider.addListener(this);
     timeSlider.setRange(0.0, 1.0, 0.01);
     timeSlider.setValue(0.0); //start from time: 0.0 sec
+
     speedSlider.addListener(this);
     speedSlider.setRange(0.5, 3.0, 0.1);
     speedSlider.setValue(1.0); //start from time: 0.0 sec
+
     addAndMakeVisible(volumeSlider);
     addAndMakeVisible(timeSlider);
     addAndMakeVisible(speedSlider);
     addAndMakeVisible(metadataLable);
+
     metadataLable.setJustificationType(juce::Justification::centred);
     metadataLable.setColour(juce::Label::textColourId, juce::Colours::white);
 
