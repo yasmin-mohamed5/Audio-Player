@@ -22,6 +22,9 @@ Player::Player()
     addAndMakeVisible(volumeSlider);
     addAndMakeVisible(timeSlider);
     addAndMakeVisible(speedSlider);
+    addAndMakeVisible(metadataLable);
+    metadataLable.setJustificationType(juce::Justification::centred);
+    metadataLable.setColour(juce::Label::textColourId, juce::Colours::white);
 
     startTimer(200);//each 200 ms
     setAudioChannels(0, 2);
@@ -71,11 +74,10 @@ void Player::resized()
     loopButton.setBounds(x, y, z, h); x += z + gap;
     endButton.setBounds(x, y, z, h); x += z + gap;
 
-
-
     volumeSlider.setBounds(20, 100, getWidth() - 40, 30);
     timeSlider.setBounds(20, 140, getWidth() - 40, 30);  // y axis is 140 to be under the value slider
     speedSlider.setBounds(20, 180, getWidth() - 40, 30);
+    metadataLable.setBounds(20, 220, getWidth() - 40, 30);
 }
 
 void Player::buttonClicked(juce::Button* button)
@@ -116,6 +118,30 @@ void Player::buttonClicked(juce::Button* button)
                             timeSlider.setRange(0.0, 1.0, 0.01);
                         }
                         timeSlider.setValue(0.0, juce::dontSendNotification);
+                        juce::String displayText;
+
+                        // Try to read metadata
+                        auto metadata = reader->metadataValues;
+                        if (metadata.containsKey("title"))
+                            displayText = metadata["title"];
+                        if (metadata.containsKey("artist"))
+                            displayText += " - " + metadata["artist"];
+
+                        // If nothing found, fallback to filename
+                        if (displayText.isEmpty())
+                            displayText = file.getFileNameWithoutExtension();
+
+                        // Add duration
+                        if (lengthInSeconds > 0.0)
+                        {
+                            int minutes = (int)(lengthInSeconds / 60);
+                            int seconds = (int)std::fmod(lengthInSeconds, 60.0);
+                            displayText += "  [" + juce::String(minutes) + ":" +
+                                juce::String(seconds).paddedLeft('0', 2) + "]";
+                        }
+
+                        // Update label
+                        metadataLable.setText(displayText, juce::dontSendNotification);
                         transportSource.start();
                     }
                 }

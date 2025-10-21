@@ -8,7 +8,7 @@ class Player : public juce::AudioAppComponent,
 {
 public:
     Player();
-    ~Player() override; 
+    ~Player() override;
 
     void paint(juce::Graphics& g) override;
     void resized() override;
@@ -49,6 +49,7 @@ private:
     juce::Slider volumeSlider;
     juce::Slider timeSlider;
     juce::Slider speedSlider;
+    juce::Label metadataLable;
 
     std::unique_ptr<juce::FileChooser> fileChooser;
 
