@@ -30,6 +30,8 @@ private:
     juce::AudioFormatManager formatManager;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
     juce::AudioTransportSource transportSource;
+    juce::ResamplingAudioSource resampleSource{ &transportSource, false, 2 };
+
 
     // GUI
     juce::TextButton loadButton{ "Load" };
@@ -46,6 +48,7 @@ private:
     float previousGain = 0.5f;
     juce::Slider volumeSlider;
     juce::Slider timeSlider;
+    juce::Slider speedSlider;
 
     std::unique_ptr<juce::FileChooser> fileChooser;
 

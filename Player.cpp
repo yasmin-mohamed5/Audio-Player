@@ -16,8 +16,12 @@ Player::Player()
     timeSlider.addListener(this);
     timeSlider.setRange(0.0, 1.0, 0.01);
     timeSlider.setValue(0.0); //start from time: 0.0 sec
+    speedSlider.addListener(this);
+    speedSlider.setRange(0.5, 3.0, 0.1);
+    speedSlider.setValue(1.0); //start from time: 0.0 sec
     addAndMakeVisible(volumeSlider);
     addAndMakeVisible(timeSlider);
+    addAndMakeVisible(speedSlider);
 
     startTimer(200);//each 200 ms
     setAudioChannels(0, 2);
@@ -31,12 +35,12 @@ Player::~Player() {
 
 void Player::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
-    transportSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
+    resampleSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
 void Player::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
 {
-    transportSource.getNextAudioBlock(bufferToFill);
+    resampleSource.getNextAudioBlock(bufferToFill);
 }
 
 void Player::releaseResources()
@@ -71,6 +75,7 @@ void Player::resized()
 
     volumeSlider.setBounds(20, 100, getWidth() - 40, 30);
     timeSlider.setBounds(20, 140, getWidth() - 40, 30);  // y axis is 140 to be under the value slider
+    speedSlider.setBounds(20, 180, getWidth() - 40, 30);
 }
 
 void Player::buttonClicked(juce::Button* button)
@@ -189,6 +194,9 @@ void Player::sliderValueChanged(juce::Slider* slider)
     }
     else if (slider == &timeSlider) {
         transportSource.setPosition((float)slider->getValue());
+    } else if (slider == &speedSlider) {
+        float speed = (float)speedSlider.getValue();
+        resampleSource.setResamplingRatio(speed);
     }
 }
 
