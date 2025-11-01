@@ -135,7 +135,7 @@ void Player::resized()
     int gap = 10;
 
     loadButton.setBounds(x, y, z, h); x += z + gap;
-    loadPlaylistButton.setBounds(x, y, z, h); x += z + 40 + gap;
+    loadPlaylistButton.setBounds(x, y, z, h); x += z + gap;
     playlistBox.setBounds(x, y, 200, h); x += 200 + gap;
     playButton.setBounds(x, y, z, h); x += z + gap;
     pauseButton.setBounds(x, y, z, h); x += z + gap;
