@@ -10,6 +10,7 @@ Player::Player()
         addAndMakeVisible(btn);
     }previousGain = 0.5f;
 
+
     volumeSlider.setRange(0.0, 1.0, 0.01);
     volumeSlider.setValue(0.5); // start from 50% of the value
     volumeSlider.addListener(this);
@@ -26,6 +27,7 @@ Player::Player()
     addAndMakeVisible(timeSlider);
     addAndMakeVisible(speedSlider);
     addAndMakeVisible(metadataLable);
+    thumbnail.addChangeListener(this);
     addAndMakeVisible(setStart);
     addAndMakeVisible(setEnd);
 
@@ -37,6 +39,7 @@ Player::Player()
 
     startTimer(200);//each 200 ms
     setAudioChannels(0, 2);
+
     is_restartLoop = false;
     isLooping = false;
     startPoint = 0.0;
@@ -66,7 +69,33 @@ void Player::releaseResources()
 void Player::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colours::darkgrey);
+
+    double total = thumbnail.getTotalLength();
+
+    juce::Rectangle<int> waveformArea(20, 300, getWidth() - 40, 100);
+
+    if (total > 0.0)
+    {
+        g.setColour(juce::Colours::deepskyblue);
+        // draw only channel 0 (single waveform)
+        thumbnail.drawChannel(g, waveformArea, 0.0, total, 0, 0.8f);
+
+        double currentTime = transportSource.getCurrentPosition();
+        float x = waveformArea.getX() + (float)((currentTime / total) * waveformArea.getWidth());
+
+        g.setColour(juce::Colours::black);
+        g.drawLine(x, waveformArea.getY(), x, waveformArea.getBottom(), 3.0f);
+    }
+    else
+    {
+        g.setColour(juce::Colours::deepskyblue);
+        g.drawRect(waveformArea, 2);
+        g.setColour(juce::Colours::white);
+        g.drawText("Load the sound", waveformArea, juce::Justification::centred, false);
+    }
 }
+
+
 
 void Player::resized()
 {
@@ -89,9 +118,9 @@ void Player::resized()
 	loopStartEndButton.setBounds(x, y, z+20, h); x += z + (3*gap);
 	setStart.setBounds(x, y, 40, h); x += 45;
 	setEnd.setBounds(x, y, 40, h); x += z + gap;
-    
+
     volumeSlider.setBounds(20, 160, getWidth() - 40, 30);
-    timeSlider.setBounds(20, 200, getWidth() - 40, 30); 
+    timeSlider.setBounds(20, 200, getWidth() - 40, 30);
     speedSlider.setBounds(20, 240, getWidth() - 40, 30);
     metadataLable.setBounds(20, 280, getWidth() - 40, 30);
 }
@@ -126,6 +155,8 @@ void Player::buttonClicked(juce::Button* button)
                             0,
                             nullptr,
                             reader->sampleRate);
+
+                        thumbnail.setSource(new juce::FileInputSource(file));
                         double lengthInSeconds = transportSource.getLengthInSeconds();
                         if (lengthInSeconds > 0.0) {
                             timeSlider.setRange(0.0, lengthInSeconds, 0.01); // set rage in seconds to the slider
@@ -279,18 +310,27 @@ void Player::timerCallback()
     if (readerSource != nullptr) {
         double pos = transportSource.getCurrentPosition();
         double lengthInSeconds = transportSource.getLengthInSeconds();
-        if (is_restartLoop && pos >= lengthInSeconds - 0.001) { // to avoid cut the last second 
+        if (is_restartLoop && pos >= lengthInSeconds - 0.001) { // to avoid cut the last second
             transportSource.setPosition(0.0);
             transportSource.start();
             pos = transportSource.getCurrentPosition();
         }
-        if (isLooping && (pos >= endPoint - 0.001 || pos <= startPoint)) { // to avoid cut the last second 
-            
+        if (isLooping && (pos >= endPoint - 0.001 || pos <= startPoint)) { // to avoid cut the last second
+
             transportSource.setPosition(startPoint);
             transportSource.start();
             pos = transportSource.getCurrentPosition();
         }
         // update the GUI time slider
         timeSlider.setValue(pos, juce::dontSendNotification);
+        repaint();
     }
 }
+void Player::changeListenerCallback(juce::ChangeBroadcaster* source)
+{
+    if (source == &thumbnail)
+    {
+        repaint();
+    }
+}
+
