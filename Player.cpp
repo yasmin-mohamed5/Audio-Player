@@ -30,9 +30,11 @@ Player::Player()
     thumbnail.addChangeListener(this);
     addAndMakeVisible(setStart);
     addAndMakeVisible(setEnd);
+    addAndMakeVisible(repeat_times);
 
     setStart.setTextToShowWhenEmpty("Start", juce::Colours::grey);
     setEnd.setTextToShowWhenEmpty("End", juce::Colours::grey);
+	repeat_times.setTextToShowWhenEmpty("Repeat", juce::Colours::grey);
 
     metadataLable.setJustificationType(juce::Justification::centred);
     metadataLable.setColour(juce::Label::textColourId, juce::Colours::white);
@@ -44,6 +46,7 @@ Player::Player()
     isLooping = false;
     startPoint = 0.0;
 	endPoint = 0.0;
+    repeatedTimes = -1;
 }
 
 Player::~Player() {
@@ -141,7 +144,8 @@ void Player::resized()
     endButton.setBounds(x, y, z, h); x += z + gap;
 	loopStartEndButton.setBounds(x, y, z+20, h); x += z + (3*gap);
 	setStart.setBounds(x, y, 40, h); x += 45;
-	setEnd.setBounds(x, y, 40, h); x += z + gap;
+	setEnd.setBounds(x, y, 40, h); x += 45 ;
+	repeat_times.setBounds(x, y, z, h); x += z + gap;
 
     volumeSlider.setBounds(20, 160, getWidth() - 40, 30);
     timeSlider.setBounds(20, 200, getWidth() - 40, 30);
@@ -273,6 +277,10 @@ void Player::buttonClicked(juce::Button* button)
         isLooping = !isLooping;
         startPoint = setStart.getText().getDoubleValue();
         endPoint = setEnd.getText().getDoubleValue();
+		repeatedTimes = repeat_times.getText().getIntValue();
+        if (repeat_times.isEmpty()) {
+            repeatedTimes = -1;
+        }
         if (startPoint == endPoint) {
 			isLooping = false;
         }
@@ -292,10 +300,12 @@ void Player::buttonClicked(juce::Button* button)
             loopStartEndButton.setButtonText("Looping");
         }
         else {
+            repeatedTimes = -1;
             startPoint = 0.0;
             endPoint = 0.0;
             setStart.clear();
             setEnd.clear();
+			repeat_times.clear();
             loopStartEndButton.setButtonText("values to loop");
         }
     }
@@ -339,11 +349,12 @@ void Player::timerCallback()
             transportSource.start();
             pos = transportSource.getCurrentPosition();
         }
-        if (isLooping && (pos >= endPoint - 0.001 || pos <= startPoint)) { // to avoid cut the last second
+        if (isLooping && repeatedTimes &&(pos >= endPoint - 0.001 || pos <= startPoint)) { // to avoid cut the last second
 
             transportSource.setPosition(startPoint);
             transportSource.start();
             pos = transportSource.getCurrentPosition();
+            repeatedTimes--;
         }
         // update the GUI time slider
         timeSlider.setValue(pos, juce::dontSendNotification);

@@ -48,9 +48,11 @@ private:
     juce::TextButton loopStartEndButton{ "values to loop" };
     juce::TextEditor setStart;
     juce::TextEditor setEnd;
+    juce::TextEditor repeat_times;
     double startPoint, endPoint;
 	bool isLooping;
     bool is_restartLoop;
+    int repeatedTimes;
     bool isMuted = false;
     float previousGain = 0.5f;
     juce::Slider volumeSlider;
