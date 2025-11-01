@@ -4,12 +4,11 @@ Player::Player()
 {
     formatManager.registerBasicFormats();
 
-    for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton, &muteButton, &loopButton, &loopStartEndButton})
+    for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton, &muteButton, &loopButton, &loopStartEndButton, &loadPlaylistButton })
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
-    }previousGain = 0.5f;
-
+    } previousGain = 0.5f;
 
     volumeSlider.setRange(0.0, 1.0, 0.01);
     volumeSlider.setValue(0.5); // start from 50% of the value
@@ -21,8 +20,10 @@ Player::Player()
 
     speedSlider.addListener(this);
     speedSlider.setRange(0.05, 2.0, 0.01);
-    speedSlider.setValue(1.0); 
+    speedSlider.setValue(1.0);
 
+    playlistBox.addListener(this); // listen for selection change
+    addAndMakeVisible(playlistBox);
     addAndMakeVisible(volumeSlider);
     addAndMakeVisible(timeSlider);
     addAndMakeVisible(speedSlider);
@@ -34,7 +35,7 @@ Player::Player()
 
     setStart.setTextToShowWhenEmpty("Start", juce::Colours::grey);
     setEnd.setTextToShowWhenEmpty("End", juce::Colours::grey);
-	repeat_times.setTextToShowWhenEmpty("Repeat", juce::Colours::grey);
+    repeat_times.setTextToShowWhenEmpty("Repeat", juce::Colours::grey);
 
     metadataLable.setJustificationType(juce::Justification::centred);
     metadataLable.setColour(juce::Label::textColourId, juce::Colours::white);
@@ -45,7 +46,7 @@ Player::Player()
     is_restartLoop = false;
     isLooping = false;
     startPoint = 0.0;
-	endPoint = 0.0;
+    endPoint = 0.0;
     repeatedTimes = -1;
 }
 
@@ -100,12 +101,12 @@ void Player::paint(juce::Graphics& g)
 
 
         juce::String timeText = juce::String(currentMinutes) + ":" +
-                                juce::String(currentSeconds).paddedLeft('0', 2) +
-                                " / " +
-                                juce::String(totalMinutes) + ":" +
-                                juce::String(totalSeconds).paddedLeft('0', 2);
+            juce::String(currentSeconds).paddedLeft('0', 2) +
+            " / " +
+            juce::String(totalMinutes) + ":" +
+            juce::String(totalSeconds).paddedLeft('0', 2);
 
-        int textX = waveformArea.getX() ;
+        int textX = waveformArea.getX();
         int textY = waveformArea.getBottom() + 5;
 
         g.setColour(juce::Colours::white);
@@ -134,18 +135,20 @@ void Player::resized()
     int gap = 10;
 
     loadButton.setBounds(x, y, z, h); x += z + gap;
+    loadPlaylistButton.setBounds(x, y, z, h); x += z + 40 + gap;
+    playlistBox.setBounds(x, y, 200, h); x += 200 + gap;
     playButton.setBounds(x, y, z, h); x += z + gap;
     pauseButton.setBounds(x, y, z, h); x += z + gap;
-    restartButton.setBounds(x, y, z, h); x += z + gap;
+    restartButton.setBounds(x, y, z, h); y += 60; x = 20;
     stopButton.setBounds(x, y, z, h); x += z + gap;
     startButton.setBounds(x, y, z, h); x += z + gap;
-    muteButton.setBounds(x, y, z, h);  y += 60; x = 20;
-    loopButton.setBounds(x, y, z, h); x += z + gap;
     endButton.setBounds(x, y, z, h); x += z + gap;
-	loopStartEndButton.setBounds(x, y, z+20, h); x += z + (3*gap);
-	setStart.setBounds(x, y, 40, h); x += 45;
-	setEnd.setBounds(x, y, 40, h); x += 45 ;
-	repeat_times.setBounds(x, y, z, h); x += z + gap;
+    loopButton.setBounds(x, y, z, h); x += z + gap;
+    loopStartEndButton.setBounds(x, y, z + 20, h); x += z + (3 * gap);
+    setStart.setBounds(x, y, 40, h); x += 45;
+    setEnd.setBounds(x, y, 40, h); x += 45;
+    repeat_times.setBounds(x, y, z, h); x += z + gap;
+    muteButton.setBounds(x, y, z, h);
 
     volumeSlider.setBounds(20, 160, getWidth() - 40, 30);
     timeSlider.setBounds(20, 200, getWidth() - 40, 30);
@@ -155,19 +158,39 @@ void Player::resized()
 
 void Player::buttonClicked(juce::Button* button)
 {
+    if (button == &loadPlaylistButton)
+    {
+        fileChooser = std::make_unique<juce::FileChooser>(
+            "Select audio files...", juce::File{}, "*.wav;*.mp3");
+
+        // NEW: Allow multiple file selection
+        fileChooser->launchAsync(
+            juce::FileBrowserComponent::openMode
+            | juce::FileBrowserComponent::canSelectFiles
+            | juce::FileBrowserComponent::canSelectMultipleItems,
+            [this](const juce::FileChooser& fc)
+            {
+                auto files = fc.getResults(); //  returns an Array<File>
+                if (files.isEmpty())
+                    return;
+
+                loadPlaylistFiles(files);
+            });
+        return;
+    }
     if (button == &loadButton) {
         fileChooser = std::make_unique<juce::FileChooser>(
-            "Select an audio file...", \
+            "Select an audio file...", juce::File{},"*.wav;*.mp3");
 
-            juce::File{},
-            "*.wav;*.mp3");
         fileChooser->launchAsync(
             juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
             [this](const juce::FileChooser& fc)
             {
                 auto file = fc.getResult();
-                if (file.existsAsFile())
-                {
+                if (file.existsAsFile()){
+                juce::Array<juce::File> single{ file };
+                loadPlaylistFiles(single);
+
                     if (auto* reader = formatManager.createReaderFor(file))
                     {
                         // 🔑 Disconnect old source first
@@ -277,12 +300,12 @@ void Player::buttonClicked(juce::Button* button)
         isLooping = !isLooping;
         startPoint = setStart.getText().getDoubleValue();
         endPoint = setEnd.getText().getDoubleValue();
-		repeatedTimes = repeat_times.getText().getIntValue();
+        repeatedTimes = repeat_times.getText().getIntValue();
         if (repeat_times.isEmpty()) {
             repeatedTimes = -1;
         }
         if (startPoint == endPoint) {
-			isLooping = false;
+            isLooping = false;
         }
         double lengthInSeconds = transportSource.getLengthInSeconds();
         if (startPoint < 0) {
@@ -305,7 +328,7 @@ void Player::buttonClicked(juce::Button* button)
             endPoint = 0.0;
             setStart.clear();
             setEnd.clear();
-			repeat_times.clear();
+            repeat_times.clear();
             loopStartEndButton.setButtonText("values to loop");
         }
     }
@@ -331,12 +354,38 @@ void Player::sliderValueChanged(juce::Slider* slider)
     }
     else if (slider == &timeSlider) {
         transportSource.setPosition((float)slider->getValue());
-    } else if (slider == &speedSlider) {
+    }
+    else if (slider == &speedSlider) {
         float speed = (float)speedSlider.getValue();
         resampleSource.setResamplingRatio(speed);
     }
 }
 
+void Player::loadPlaylistFiles(const juce::Array<juce::File>& files)
+{
+    // Clear previous playlist and UI
+    playlistFiles.clear();
+    playlistBox.clear();
+
+    // Keep only existing files
+    for (auto& f : files)
+        if (f.existsAsFile())
+            playlistFiles.add(f);
+
+    if (playlistFiles.isEmpty())
+        return;
+
+    // Populate ComboBox with names, IDs starting from 1
+    int id = 1;
+    for (auto& f : playlistFiles)
+        playlistBox.addItem(f.getFileNameWithoutExtension(), id++);
+
+    playlistBox.setSelectedId(1, juce::dontSendNotification);  // select first item
+    currentTrackIndex = 0;
+
+    // Switch to first track
+    selectTrack(currentTrackIndex);
+}
 
 void Player::timerCallback()
 {
@@ -349,7 +398,7 @@ void Player::timerCallback()
             transportSource.start();
             pos = transportSource.getCurrentPosition();
         }
-        if (isLooping && repeatedTimes &&(pos >= endPoint - 0.001 || pos <= startPoint)) { // to avoid cut the last second
+        if (isLooping && repeatedTimes && (pos >= endPoint - 0.001 || pos <= startPoint)) { // to avoid cut the last second
 
             transportSource.setPosition(startPoint);
             transportSource.start();
@@ -368,4 +417,62 @@ void Player::changeListenerCallback(juce::ChangeBroadcaster* source)
         repaint();
     }
 }
+void Player::comboBoxChanged(juce::ComboBox* comboBox)
+{
+    if (comboBox == &playlistBox)
+    {
+        int id = playlistBox.getSelectedId();
+        if (id > 0)
+            selectTrack(id - 1); // map ComboBox ID to zero-based index
+    }
+}
+void Player::selectTrack(int index)
+{
+    if (index < 0 || index >= playlistFiles.size())
+        return;
 
+    auto file = playlistFiles[index];
+
+    // Stop and detach previous source
+    transportSource.stop();
+    transportSource.setSource(nullptr);
+    readerSource.reset();
+
+    // Create a new reader for the selected file
+    if (auto* reader = formatManager.createReaderFor(file))
+    {
+        readerSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true);
+        transportSource.setSource(readerSource.get(), 0, nullptr, reader->sampleRate);
+
+        // Update thumbnail to show the selected file
+        thumbnail.setSource(new juce::FileInputSource(file));
+
+        // Update time slider range
+        double lengthInSeconds = transportSource.getLengthInSeconds();
+        timeSlider.setRange(lengthInSeconds > 0.0 ? 0.0 : 0.0,
+            lengthInSeconds > 0.0 ? lengthInSeconds : 1.0,
+            0.01);
+        timeSlider.setValue(0.0, juce::dontSendNotification);
+
+        // Update metadata label (title/artist or filename + duration)
+        juce::String displayText;
+        auto metadata = reader->metadataValues;
+        if (metadata.containsKey("title"))  displayText = metadata["title"];
+        if (metadata.containsKey("artist")) displayText += " - " + metadata["artist"];
+        if (displayText.isEmpty())          displayText = file.getFileNameWithoutExtension();
+
+        if (lengthInSeconds > 0.0)
+        {
+            int minutes = (int)(lengthInSeconds / 60);
+            int seconds = (int)std::fmod(lengthInSeconds, 60.0);
+            displayText += "  [" + juce::String(minutes) + ":" +
+                juce::String(seconds).paddedLeft('0', 2) + "]";
+        }
+
+        metadataLable.setText(displayText, juce::dontSendNotification);
+
+        // Optionally auto-start on selection:
+        transportSource.start();
+    }
+    currentTrackIndex = index;
+}
