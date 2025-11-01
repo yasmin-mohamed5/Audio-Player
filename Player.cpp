@@ -29,6 +29,9 @@ Player::Player()
     addAndMakeVisible(setStart);
     addAndMakeVisible(setEnd);
 
+    setStart.setTextToShowWhenEmpty("start", juce::Colours::grey);
+    setEnd.setTextToShowWhenEmpty("start", juce::Colours::grey);
+
     metadataLable.setJustificationType(juce::Justification::centred);
     metadataLable.setColour(juce::Label::textColourId, juce::Colours::white);
 
@@ -36,6 +39,8 @@ Player::Player()
     setAudioChannels(0, 2);
     is_restartLoop = false;
     isLooping = false;
+    startPoint = 0.0;
+	endPoint = 0.0;
 }
 
 Player::~Player() {
@@ -213,6 +218,9 @@ void Player::buttonClicked(juce::Button* button)
         isLooping = !isLooping;
         startPoint = setStart.getText().getDoubleValue();
         endPoint = setEnd.getText().getDoubleValue();
+        if (startPoint == endPoint) {
+			isLooping = false;
+        }
         double lengthInSeconds = transportSource.getLengthInSeconds();
         if (startPoint < 0) {
             startPoint = 0;
@@ -229,7 +237,13 @@ void Player::buttonClicked(juce::Button* button)
             loopStartEndButton.setButtonText("Looping");
         }
         else {
+            startPoint = 0.0;
+            endPoint = 0.0;
+            setStart.clear();
+            setEnd.clear();
             loopStartEndButton.setButtonText("values to loop");
+            setStart.setTextToShowWhenEmpty("start", juce::Colours::grey);
+            setEnd.setTextToShowWhenEmpty("start", juce::Colours::grey);
         }
     }
 
