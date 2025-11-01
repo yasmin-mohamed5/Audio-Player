@@ -10,6 +10,7 @@ Player::Player()
         addAndMakeVisible(btn);
     }previousGain = 0.5f;
 
+
     volumeSlider.setRange(0.0, 1.0, 0.01);
     volumeSlider.setValue(0.5); // start from 50% of the value
     volumeSlider.addListener(this);
@@ -23,12 +24,14 @@ Player::Player()
     addAndMakeVisible(timeSlider);
     addAndMakeVisible(speedSlider);
     addAndMakeVisible(metadataLable);
+    thumbnail.addChangeListener(this);
     metadataLable.setJustificationType(juce::Justification::centred);
     metadataLable.setColour(juce::Label::textColourId, juce::Colours::white);
 
     startTimer(200);//each 200 ms
     setAudioChannels(0, 2);
     is_restart = false;
+
 }
 
 Player::~Player() {
@@ -54,7 +57,34 @@ void Player::releaseResources()
 void Player::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colours::darkgrey);
+
+    double total = thumbnail.getTotalLength();
+    DBG("paint() thumbnail length: " << total);
+
+    juce::Rectangle<int> waveformArea(20, 260, getWidth() - 40, 100);
+
+    if (total > 0.0)
+    {
+        g.setColour(juce::Colours::deepskyblue);
+        // draw only channel 0 (single waveform)
+        thumbnail.drawChannel(g, waveformArea, 0.0, total, 0, 0.8f);
+
+        double currentTime = transportSource.getCurrentPosition();
+        float x = waveformArea.getX() + (float)((currentTime / total) * waveformArea.getWidth());
+
+        g.setColour(juce::Colours::black);
+        g.drawLine(x, waveformArea.getY(), x, waveformArea.getBottom(), 3.0f);
+    }
+    else
+    {
+        g.setColour(juce::Colours::deepskyblue);
+        g.drawRect(waveformArea, 2);
+        g.setColour(juce::Colours::white);
+        g.drawText("Load the sound", waveformArea, juce::Justification::centred, false);
+    }
 }
+
+
 
 void Player::resized()
 {
@@ -110,6 +140,8 @@ void Player::buttonClicked(juce::Button* button)
                             0,
                             nullptr,
                             reader->sampleRate);
+
+                        thumbnail.setSource(new juce::FileInputSource(file));
                         double lengthInSeconds = transportSource.getLengthInSeconds();
                         if (lengthInSeconds > 0.0) {
                             timeSlider.setRange(0.0, lengthInSeconds, 0.01); // set rage in seconds to the slider
@@ -240,5 +272,15 @@ void Player::timerCallback()
         }
         // update the GUI time slider
         timeSlider.setValue(pos, juce::dontSendNotification);
+        repaint();
     }
 }
+void Player::changeListenerCallback(juce::ChangeBroadcaster* source)
+{
+    if (source == &thumbnail)
+    {
+        DBG("thumbnail changed, totalLength = " << thumbnail.getTotalLength());
+        repaint();
+    }
+}
+

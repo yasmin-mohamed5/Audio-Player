@@ -4,7 +4,8 @@
 class Player : public juce::AudioAppComponent,
     public juce::Button::Listener,
     public juce::Slider::Listener,
-    public juce::Timer
+    public juce::Timer,
+    public juce::ChangeListener
 {
 public:
     Player();
@@ -25,6 +26,7 @@ public:
     // Time
     void timerCallback() override;
 
+    void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 private:
     // Audio
     juce::AudioFormatManager formatManager;
@@ -50,6 +52,10 @@ private:
     juce::Slider timeSlider;
     juce::Slider speedSlider;
     juce::Label metadataLable;
+    juce::AudioThumbnailCache thumbnailCache{10};
+    juce::AudioThumbnail thumbnail{512, formatManager, thumbnailCache};
+
+
 
     std::unique_ptr<juce::FileChooser> fileChooser;
 
