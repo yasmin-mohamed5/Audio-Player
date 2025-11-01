@@ -42,8 +42,13 @@ private:
     juce::TextButton endButton{ "►|" };
     juce::TextButton stopButton{ "Stop" };
     juce::TextButton loopButton{ "Loop" };
-    bool is_restart;
     juce::TextButton muteButton{ "Mute" };
+    juce::TextButton loopStartEndButton{ "values to loop" };
+    juce::TextEditor setStart;
+    juce::TextEditor setEnd;
+    double startPoint, endPoint;
+	bool isLooping;
+    bool is_restartLoop;
     bool isMuted = false;
     float previousGain = 0.5f;
     juce::Slider volumeSlider;

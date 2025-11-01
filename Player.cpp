@@ -4,7 +4,7 @@ Player::Player()
 {
     formatManager.registerBasicFormats();
 
-    for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton, &muteButton, &loopButton })
+    for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton, &muteButton, &loopButton, &loopStartEndButton})
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -19,20 +19,23 @@ Player::Player()
     timeSlider.setValue(0.0); //start from time: 0.0 sec
 
     speedSlider.addListener(this);
-    speedSlider.setRange(0.5, 3.0, 0.1);
-    speedSlider.setValue(1.0); //start from time: 0.0 sec
+    speedSlider.setRange(0.25, 2.0, 0.01);
+    speedSlider.setValue(1.0); 
 
     addAndMakeVisible(volumeSlider);
     addAndMakeVisible(timeSlider);
     addAndMakeVisible(speedSlider);
     addAndMakeVisible(metadataLable);
+    addAndMakeVisible(setStart);
+    addAndMakeVisible(setEnd);
 
     metadataLable.setJustificationType(juce::Justification::centred);
     metadataLable.setColour(juce::Label::textColourId, juce::Colours::white);
 
     startTimer(200);//each 200 ms
     setAudioChannels(0, 2);
-    is_restart = false;
+    is_restartLoop = false;
+    isLooping = false;
 }
 
 Player::~Player() {
@@ -62,6 +65,7 @@ void Player::paint(juce::Graphics& g)
 
 void Player::resized()
 {
+    // y-> y-axis // x-> x-axis // z-> width // h-> height
     int y = 20;
     int x = 20;
     int z = 80;
@@ -74,14 +78,17 @@ void Player::resized()
     restartButton.setBounds(x, y, z, h); x += z + gap;
     stopButton.setBounds(x, y, z, h); x += z + gap;
     startButton.setBounds(x, y, z, h); x += z + gap;
-    muteButton.setBounds(x, y, z, h); x += z + gap;
+    muteButton.setBounds(x, y, z, h);  y += 60; x = 20;
     loopButton.setBounds(x, y, z, h); x += z + gap;
     endButton.setBounds(x, y, z, h); x += z + gap;
-
-    volumeSlider.setBounds(20, 100, getWidth() - 40, 30);
-    timeSlider.setBounds(20, 140, getWidth() - 40, 30);  // y axis is 140 to be under the value slider
-    speedSlider.setBounds(20, 180, getWidth() - 40, 30);
-    metadataLable.setBounds(20, 220, getWidth() - 40, 30);
+	loopStartEndButton.setBounds(x, y, z+20, h); x += z + (3*gap);
+	setStart.setBounds(x, y, 40, h); x += 45;
+	setEnd.setBounds(x, y, 40, h); x += z + gap;
+    
+    volumeSlider.setBounds(20, 160, getWidth() - 40, 30);
+    timeSlider.setBounds(20, 200, getWidth() - 40, 30); 
+    speedSlider.setBounds(20, 240, getWidth() - 40, 30);
+    metadataLable.setBounds(20, 280, getWidth() - 40, 30);
 }
 
 void Player::buttonClicked(juce::Button* button)
@@ -194,12 +201,35 @@ void Player::buttonClicked(juce::Button* button)
         }
     }
     else if (button == &loopButton) {
-        is_restart = !is_restart;
-        if (is_restart) {
+        is_restartLoop = !is_restartLoop;
+        if (is_restartLoop) {
             loopButton.setButtonText("Looping");
         }
         else {
             loopButton.setButtonText("Loop");
+        }
+    }
+    else if (button == &loopStartEndButton) {
+        isLooping = !isLooping;
+        startPoint = setStart.getText().getDoubleValue();
+        endPoint = setEnd.getText().getDoubleValue();
+        double lengthInSeconds = transportSource.getLengthInSeconds();
+        if (startPoint < 0) {
+            startPoint = 0;
+        }
+        if (endPoint > lengthInSeconds) {
+            endPoint = lengthInSeconds;
+        }
+        if (startPoint > endPoint) {
+            double x = startPoint;
+            startPoint = endPoint;
+            endPoint = x;
+        }
+        if (isLooping) {
+            loopStartEndButton.setButtonText("Looping");
+        }
+        else {
+            loopStartEndButton.setButtonText("values to loop");
         }
     }
 
@@ -237,8 +267,14 @@ void Player::timerCallback()
     if (readerSource != nullptr) {
         double pos = transportSource.getCurrentPosition();
         double lengthInSeconds = transportSource.getLengthInSeconds();
-        if (is_restart && pos >= lengthInSeconds - 0.001) { // to avoid cut the last second 
+        if (is_restartLoop && pos >= lengthInSeconds - 0.001) { // to avoid cut the last second 
             transportSource.setPosition(0.0);
+            transportSource.start();
+            pos = transportSource.getCurrentPosition();
+        }
+        if (isLooping && (pos >= endPoint - 0.001 || pos <= startPoint)) { // to avoid cut the last second 
+            
+            transportSource.setPosition(startPoint);
             transportSource.start();
             pos = transportSource.getCurrentPosition();
         }
