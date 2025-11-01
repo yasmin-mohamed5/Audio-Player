@@ -242,8 +242,6 @@ void Player::buttonClicked(juce::Button* button)
             setStart.clear();
             setEnd.clear();
             loopStartEndButton.setButtonText("values to loop");
-            setStart.setTextToShowWhenEmpty("start", juce::Colours::grey);
-            setEnd.setTextToShowWhenEmpty("start", juce::Colours::grey);
         }
     }
 
