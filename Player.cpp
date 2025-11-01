@@ -29,8 +29,8 @@ Player::Player()
     addAndMakeVisible(setStart);
     addAndMakeVisible(setEnd);
 
-    setStart.setTextToShowWhenEmpty("start", juce::Colours::grey);
-    setEnd.setTextToShowWhenEmpty("start", juce::Colours::grey);
+    setStart.setTextToShowWhenEmpty("Start", juce::Colours::grey);
+    setEnd.setTextToShowWhenEmpty("End", juce::Colours::grey);
 
     metadataLable.setJustificationType(juce::Justification::centred);
     metadataLable.setColour(juce::Label::textColourId, juce::Colours::white);
