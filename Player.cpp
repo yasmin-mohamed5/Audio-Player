@@ -85,6 +85,30 @@ void Player::paint(juce::Graphics& g)
 
         g.setColour(juce::Colours::black);
         g.drawLine(x, waveformArea.getY(), x, waveformArea.getBottom(), 3.0f);
+
+        double Time = transportSource.getCurrentPosition();
+        int currentMinutes = (int)(Time / 60);
+        int currentSeconds = (int)std::fmod(Time, 60.0);
+
+
+        double total = thumbnail.getTotalLength();
+        int totalMinutes = (int)(total / 60);
+        int totalSeconds = (int)std::fmod(total, 60.0);
+
+
+        juce::String timeText = juce::String(currentMinutes) + ":" +
+                                juce::String(currentSeconds).paddedLeft('0', 2) +
+                                " / " +
+                                juce::String(totalMinutes) + ":" +
+                                juce::String(totalSeconds).paddedLeft('0', 2);
+
+        int textX = waveformArea.getX() ;
+        int textY = waveformArea.getBottom() + 5;
+
+        g.setColour(juce::Colours::white);
+        g.setFont(14.0f);
+        g.drawText(timeText, textX, textY, 80, 20, juce::Justification::left);
+
     }
     else
     {
