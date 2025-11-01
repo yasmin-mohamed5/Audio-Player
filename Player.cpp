@@ -4,7 +4,7 @@ Player::Player()
 {
     formatManager.registerBasicFormats();
 
-    for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton, &muteButton, &loopButton })
+    for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton, &muteButton, &loopButton, &loopStartEndButton})
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -14,24 +14,36 @@ Player::Player()
     volumeSlider.setRange(0.0, 1.0, 0.01);
     volumeSlider.setValue(0.5); // start from 50% of the value
     volumeSlider.addListener(this);
+
     timeSlider.addListener(this);
     timeSlider.setRange(0.0, 1.0, 0.01);
     timeSlider.setValue(0.0); //start from time: 0.0 sec
+
     speedSlider.addListener(this);
     speedSlider.setRange(0.05, 2.0, 0.01);
     speedSlider.setValue(1.0); 
+
     addAndMakeVisible(volumeSlider);
     addAndMakeVisible(timeSlider);
     addAndMakeVisible(speedSlider);
     addAndMakeVisible(metadataLable);
     thumbnail.addChangeListener(this);
+    addAndMakeVisible(setStart);
+    addAndMakeVisible(setEnd);
+
+    setStart.setTextToShowWhenEmpty("start", juce::Colours::grey);
+    setEnd.setTextToShowWhenEmpty("start", juce::Colours::grey);
+
     metadataLable.setJustificationType(juce::Justification::centred);
     metadataLable.setColour(juce::Label::textColourId, juce::Colours::white);
 
     startTimer(200);//each 200 ms
     setAudioChannels(0, 2);
-    is_restart = false;
 
+    is_restartLoop = false;
+    isLooping = false;
+    startPoint = 0.0;
+	endPoint = 0.0;
 }
 
 Player::~Player() {
@@ -59,9 +71,8 @@ void Player::paint(juce::Graphics& g)
     g.fillAll(juce::Colours::darkgrey);
 
     double total = thumbnail.getTotalLength();
-    DBG("paint() thumbnail length: " << total);
 
-    juce::Rectangle<int> waveformArea(20, 260, getWidth() - 40, 100);
+    juce::Rectangle<int> waveformArea(20, 300, getWidth() - 40, 100);
 
     if (total > 0.0)
     {
@@ -88,6 +99,7 @@ void Player::paint(juce::Graphics& g)
 
 void Player::resized()
 {
+    // y-> y-axis // x-> x-axis // z-> width // h-> height
     int y = 20;
     int x = 20;
     int z = 80;
@@ -100,14 +112,17 @@ void Player::resized()
     restartButton.setBounds(x, y, z, h); x += z + gap;
     stopButton.setBounds(x, y, z, h); x += z + gap;
     startButton.setBounds(x, y, z, h); x += z + gap;
-    muteButton.setBounds(x, y, z, h); x += z + gap;
+    muteButton.setBounds(x, y, z, h);  y += 60; x = 20;
     loopButton.setBounds(x, y, z, h); x += z + gap;
     endButton.setBounds(x, y, z, h); x += z + gap;
+	loopStartEndButton.setBounds(x, y, z+20, h); x += z + (3*gap);
+	setStart.setBounds(x, y, 40, h); x += 45;
+	setEnd.setBounds(x, y, 40, h); x += z + gap;
 
-    volumeSlider.setBounds(20, 100, getWidth() - 40, 30);
-    timeSlider.setBounds(20, 140, getWidth() - 40, 30);  // y axis is 140 to be under the value slider
-    speedSlider.setBounds(20, 180, getWidth() - 40, 30);
-    metadataLable.setBounds(20, 220, getWidth() - 40, 30);
+    volumeSlider.setBounds(20, 160, getWidth() - 40, 30);
+    timeSlider.setBounds(20, 200, getWidth() - 40, 30);
+    speedSlider.setBounds(20, 240, getWidth() - 40, 30);
+    metadataLable.setBounds(20, 280, getWidth() - 40, 30);
 }
 
 void Player::buttonClicked(juce::Button* button)
@@ -222,12 +237,42 @@ void Player::buttonClicked(juce::Button* button)
         }
     }
     else if (button == &loopButton) {
-        is_restart = !is_restart;
-        if (is_restart) {
+        is_restartLoop = !is_restartLoop;
+        if (is_restartLoop) {
             loopButton.setButtonText("Looping");
         }
         else {
             loopButton.setButtonText("Loop");
+        }
+    }
+    else if (button == &loopStartEndButton) {
+        isLooping = !isLooping;
+        startPoint = setStart.getText().getDoubleValue();
+        endPoint = setEnd.getText().getDoubleValue();
+        if (startPoint == endPoint) {
+			isLooping = false;
+        }
+        double lengthInSeconds = transportSource.getLengthInSeconds();
+        if (startPoint < 0) {
+            startPoint = 0;
+        }
+        if (endPoint > lengthInSeconds) {
+            endPoint = lengthInSeconds;
+        }
+        if (startPoint > endPoint) {
+            double x = startPoint;
+            startPoint = endPoint;
+            endPoint = x;
+        }
+        if (isLooping) {
+            loopStartEndButton.setButtonText("Looping");
+        }
+        else {
+            startPoint = 0.0;
+            endPoint = 0.0;
+            setStart.clear();
+            setEnd.clear();
+            loopStartEndButton.setButtonText("values to loop");
         }
     }
 
@@ -265,8 +310,14 @@ void Player::timerCallback()
     if (readerSource != nullptr) {
         double pos = transportSource.getCurrentPosition();
         double lengthInSeconds = transportSource.getLengthInSeconds();
-        if (is_restart && pos >= lengthInSeconds - 0.001) { // to avoid cut the last second 
+        if (is_restartLoop && pos >= lengthInSeconds - 0.001) { // to avoid cut the last second
             transportSource.setPosition(0.0);
+            transportSource.start();
+            pos = transportSource.getCurrentPosition();
+        }
+        if (isLooping && (pos >= endPoint - 0.001 || pos <= startPoint)) { // to avoid cut the last second
+
+            transportSource.setPosition(startPoint);
             transportSource.start();
             pos = transportSource.getCurrentPosition();
         }
@@ -279,7 +330,6 @@ void Player::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
     if (source == &thumbnail)
     {
-        DBG("thumbnail changed, totalLength = " << thumbnail.getTotalLength());
         repaint();
     }
 }
