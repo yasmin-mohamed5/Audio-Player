@@ -49,6 +49,8 @@ private:
     juce::TextButton muteButton{ "Mute" };
     juce::TextButton loopStartEndButton{ "values to loop" };
     juce::TextButton loadPlaylistButton{ "Load playlist" };
+    juce::TextButton forwardButton{ " +10s" };
+    juce::TextButton backwardButton{ " -10s" };
     juce::TextEditor setStart;
     juce::TextEditor setEnd;
     juce::TextEditor repeat_times;

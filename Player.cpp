@@ -4,7 +4,7 @@ Player::Player()
 {
     formatManager.registerBasicFormats();
 
-    for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton, &muteButton, &loopButton, &loopStartEndButton, &loadPlaylistButton })
+    for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton, &muteButton, &loopButton, &loopStartEndButton, &loadPlaylistButton, &forwardButton, &backwardButton })
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -87,7 +87,7 @@ void Player::paint(juce::Graphics& g)
 
     double total = thumbnail.getTotalLength();
 
-    juce::Rectangle<int> waveformArea(20, 300, getWidth() - 40, 100);
+    juce::Rectangle<int> waveformArea(20, 340, getWidth() - 40, 100);
 
     if (total > 0.0)
     {
@@ -150,21 +150,25 @@ void Player::resized()
     playlistBox.setBounds(x, y, 200, h); x += 200 + gap;
     playButton.setBounds(x, y, z, h); x += z + gap;
     pauseButton.setBounds(x, y, z, h); x += z + gap;
-    restartButton.setBounds(x, y, z, h); y += 60; x = 20;
-    stopButton.setBounds(x, y, z, h); x += z + gap;
+    stopButton.setBounds(x, y, z, h); y += h + gap; x = 20;
+    restartButton.setBounds(x, y, z, h);  x += z + gap;
     startButton.setBounds(x, y, z, h); x += z + gap;
     endButton.setBounds(x, y, z, h); x += z + gap;
+    forwardButton.setBounds(x, y, z, h); x += z + gap;
+    backwardButton.setBounds(x, y, z, h);  x += z + gap;
     loopButton.setBounds(x, y, z, h); x += z + gap;
+    muteButton.setBounds(x, y, z, h);  y += h + gap; x = 20;
     loopStartEndButton.setBounds(x, y, z + 20, h); x += z + (3 * gap);
     setStart.setBounds(x, y, 40, h); x += 45;
     setEnd.setBounds(x, y, 40, h); x += 45;
-    repeat_times.setBounds(x, y, z, h); x += z + gap;
-    muteButton.setBounds(x, y, z, h);
+    repeat_times.setBounds(x, y, z, h);
 
-    volumeSlider.setBounds(50, 160, getWidth() - 60, 30);
-    timeSlider.setBounds(50, 200, getWidth() - 60, 30);
-    speedSlider.setBounds(50, 240, getWidth() - 60, 30);
-    metadataLable.setBounds(20, 280, getWidth() - 40, 30);
+
+
+    volumeSlider.setBounds(50, 180, getWidth() - 60, 30);
+    timeSlider.setBounds(50, 220, getWidth() - 60, 30);
+    speedSlider.setBounds(50, 260, getWidth() - 60, 30);
+    metadataLable.setBounds(20, 300, getWidth() - 40, 30);
 }
 
 void Player::buttonClicked(juce::Button* button)
@@ -279,8 +283,7 @@ void Player::buttonClicked(juce::Button* button)
             transportSource.setPosition(lengthInSeconds); // jump to end
         }
     }
-    else if (button == &muteButton)
-    {
+    else if (button == &muteButton){
         if (!isMuted)
         {
             previousGain = (float)volumeSlider.getValue();
@@ -290,8 +293,7 @@ void Player::buttonClicked(juce::Button* button)
             muteButton.setButtonText("Unmute");
             DBG("Muted, previousGain=" << previousGain);
         }
-        else
-        {
+        else{
             transportSource.setGain(previousGain);
             volumeSlider.setValue(previousGain, juce::dontSendNotification);
             isMuted = false;
@@ -343,7 +345,15 @@ void Player::buttonClicked(juce::Button* button)
             loopStartEndButton.setButtonText("values to loop");
         }
     }
-
+    else if (button == &forwardButton){
+        double current = transportSource.getCurrentPosition();
+        double total = transportSource.getLengthInSeconds();
+        transportSource.setPosition(std::min(current + 10.0, total));
+    }
+    else if (button == &backwardButton){
+        double current = transportSource.getCurrentPosition();
+        transportSource.setPosition(std::max(current - 10.0, 0.0));
+    }
 
 }
 
