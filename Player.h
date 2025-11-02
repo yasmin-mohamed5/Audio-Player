@@ -51,8 +51,10 @@ private:
     juce::TextButton muteButton{ "Mute" };
     juce::TextButton loopStartEndButton{ "values to loop" };
     juce::TextButton loadPlaylistButton{ "Load playlist" };
-    juce::TextButton marker{ "Add Marker" };
-	juce::TextButton getmarker{ "Get Marker" };
+    juce::TextButton markerButton{ "Add Marker" };
+	juce::TextButton getmarkerButton{ "Get Marker" };
+    juce::TextButton forwardButton{ " +10s" };
+    juce::TextButton backwardButton{ " -10s" };
 	juce::TextEditor setMarker;
     juce::TextEditor setStart;
     juce::TextEditor setEnd;
@@ -60,6 +62,10 @@ private:
 
     vector <double> marks;
     int order;
+    
+    juce::Label speedLabel;
+    juce::Label positionLabel;
+    juce::Label volumeLabel;
     double startPoint, endPoint;
     bool isLooping;
     bool is_restartLoop;
