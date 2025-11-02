@@ -4,7 +4,7 @@ Player::Player()
 {
     formatManager.registerBasicFormats();
 
-    for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton, &muteButton, &loopButton, &loopStartEndButton, &loadPlaylistButton })
+	for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton, &muteButton, &loopButton, &loopStartEndButton, &loadPlaylistButton, &marker, &getmarker })
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -29,10 +29,13 @@ Player::Player()
     addAndMakeVisible(speedSlider);
     addAndMakeVisible(metadataLable);
     thumbnail.addChangeListener(this);
+
+	addAndMakeVisible(setMarker);
     addAndMakeVisible(setStart);
     addAndMakeVisible(setEnd);
     addAndMakeVisible(repeat_times);
-
+    
+	setMarker.setTextToShowWhenEmpty("order", juce::Colours::grey);
     setStart.setTextToShowWhenEmpty("Start", juce::Colours::grey);
     setEnd.setTextToShowWhenEmpty("End", juce::Colours::grey);
     repeat_times.setTextToShowWhenEmpty("Repeat", juce::Colours::grey);
@@ -48,6 +51,7 @@ Player::Player()
     startPoint = 0.0;
     endPoint = 0.0;
     repeatedTimes = -1;
+    order = -1;
 }
 
 Player::~Player() {
@@ -121,6 +125,15 @@ void Player::paint(juce::Graphics& g)
         g.setColour(juce::Colours::white);
         g.drawText("Load the sound", waveformArea, juce::Justification::centred, false);
     }
+	// draw markers
+    g.setColour(juce::Colours::white);
+    double lengthInSeconds = transportSource.getLengthInSeconds();
+    for (auto markTime : marks)
+    {
+		
+        float x = (float)((markTime / lengthInSeconds) * getWidth());
+        g.drawLine(x, 400.0f, x, 300.0f, 2.0f);
+    }
 }
 
 
@@ -139,8 +152,9 @@ void Player::resized()
     playlistBox.setBounds(x, y, 200, h); x += 200 + gap;
     playButton.setBounds(x, y, z, h); x += z + gap;
     pauseButton.setBounds(x, y, z, h); x += z + gap;
-    restartButton.setBounds(x, y, z, h); y += 60; x = 20;
-    stopButton.setBounds(x, y, z, h); x += z + gap;
+    restartButton.setBounds(x, y, z, h); x += z + gap;
+    muteButton.setBounds(x, y, z, h); x += z + gap;
+    stopButton.setBounds(x, y, z, h); y += 60; x = 20;
     startButton.setBounds(x, y, z, h); x += z + gap;
     endButton.setBounds(x, y, z, h); x += z + gap;
     loopButton.setBounds(x, y, z, h); x += z + gap;
@@ -148,8 +162,10 @@ void Player::resized()
     setStart.setBounds(x, y, 40, h); x += 45;
     setEnd.setBounds(x, y, 40, h); x += 45;
     repeat_times.setBounds(x, y, z, h); x += z + gap;
-    muteButton.setBounds(x, y, z, h);
-
+    marker.setBounds(x, y, z, h); x += z + gap;
+	getmarker.setBounds(x, y, z, h); x += z + gap;
+	setMarker.setBounds(x, y, 40, h); x += z + gap;
+    
     volumeSlider.setBounds(20, 160, getWidth() - 40, 30);
     timeSlider.setBounds(20, 200, getWidth() - 40, 30);
     speedSlider.setBounds(20, 240, getWidth() - 40, 30);
@@ -332,6 +348,23 @@ void Player::buttonClicked(juce::Button* button)
             loopStartEndButton.setButtonText("values to loop");
         }
     }
+    else if (button == &marker) {
+		marks.push_back(transportSource.getCurrentPosition());
+        repaint();                
+    }
+    else if (button == &getmarker) {
+		order = setMarker.getText().getIntValue();
+        if(!setMarker.isEmpty()){
+            if (order > 0 && order <= marks.size()) {
+                transportSource.setPosition(marks[order - 1]);
+                transportSource.start();
+            }
+            else {
+                setMarker.clear();
+            }
+		}
+        
+    }
 
 
 }
@@ -393,11 +426,13 @@ void Player::timerCallback()
     if (readerSource != nullptr) {
         double pos = transportSource.getCurrentPosition();
         double lengthInSeconds = transportSource.getLengthInSeconds();
+        // loop
         if (is_restartLoop && pos >= lengthInSeconds - 0.001) { // to avoid cut the last second
             transportSource.setPosition(0.0);
             transportSource.start();
             pos = transportSource.getCurrentPosition();
         }
+        // start end loop
         if (isLooping && repeatedTimes && (pos >= endPoint - 0.001 || pos <= startPoint)) { // to avoid cut the last second
 
             transportSource.setPosition(startPoint);
