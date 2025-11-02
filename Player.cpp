@@ -11,22 +11,33 @@ Player::Player()
     } previousGain = 0.5f;
 
     volumeSlider.setRange(0.0, 1.0, 0.01);
-    volumeSlider.setValue(0.5); // start from 50% of the value
+    volumeSlider.setValue(0.5f); // start from 50% of the value
     volumeSlider.addListener(this);
 
     timeSlider.addListener(this);
     timeSlider.setRange(0.0, 1.0, 0.01);
-    timeSlider.setValue(0.0); //start from time: 0.0 sec
+    timeSlider.setValue(0.0f); //start from time: 0.0 sec
 
     speedSlider.addListener(this);
-    speedSlider.setRange(0.05, 2.0, 0.01);
-    speedSlider.setValue(1.0);
+    speedSlider.setRange(0.25, 2.0, 0.01);
+    speedSlider.setValue(1.0f);
+    speedLabel.setText("Speed", juce::dontSendNotification);
+    speedLabel.attachToComponent(&speedSlider, true);
+
+    volumeLabel.setText("Volume", juce::dontSendNotification);
+    volumeLabel.attachToComponent(&volumeSlider, true);
+
+    positionLabel.setText("Time", juce::dontSendNotification);
+    positionLabel.attachToComponent(&timeSlider, true);
 
     playlistBox.addListener(this); // listen for selection change
     addAndMakeVisible(playlistBox);
     addAndMakeVisible(volumeSlider);
     addAndMakeVisible(timeSlider);
     addAndMakeVisible(speedSlider);
+    addAndMakeVisible(speedLabel);
+    addAndMakeVisible(positionLabel);
+    addAndMakeVisible( volumeLabel);
     addAndMakeVisible(metadataLable);
     thumbnail.addChangeListener(this);
     addAndMakeVisible(setStart);
@@ -150,9 +161,9 @@ void Player::resized()
     repeat_times.setBounds(x, y, z, h); x += z + gap;
     muteButton.setBounds(x, y, z, h);
 
-    volumeSlider.setBounds(20, 160, getWidth() - 40, 30);
-    timeSlider.setBounds(20, 200, getWidth() - 40, 30);
-    speedSlider.setBounds(20, 240, getWidth() - 40, 30);
+    volumeSlider.setBounds(50, 160, getWidth() - 60, 30);
+    timeSlider.setBounds(50, 200, getWidth() - 60, 30);
+    speedSlider.setBounds(50, 240, getWidth() - 60, 30);
     metadataLable.setBounds(20, 280, getWidth() - 40, 30);
 }
 

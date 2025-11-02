@@ -52,6 +52,9 @@ private:
     juce::TextEditor setStart;
     juce::TextEditor setEnd;
     juce::TextEditor repeat_times;
+    juce::Label speedLabel;
+    juce::Label positionLabel;
+    juce::Label volumeLabel;
     double startPoint, endPoint;
     bool isLooping;
     bool is_restartLoop;
