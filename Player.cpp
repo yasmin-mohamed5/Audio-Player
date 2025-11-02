@@ -59,11 +59,14 @@ Player::Player()
     startPoint = 0.0;
     endPoint = 0.0;
     repeatedTimes = -1;
+
+    loadLast();
 }
 
 Player::~Player() {
     stopTimer();
     shutdownAudio();
+    saveLast();
 }
 
 void Player::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
@@ -154,8 +157,8 @@ void Player::resized()
     restartButton.setBounds(x, y, z, h);  x += z + gap;
     startButton.setBounds(x, y, z, h); x += z + gap;
     endButton.setBounds(x, y, z, h); x += z + gap;
-    forwardButton.setBounds(x, y, z, h); x += z + gap;
     backwardButton.setBounds(x, y, z, h);  x += z + gap;
+    forwardButton.setBounds(x, y, z, h); x += z + gap;
     loopButton.setBounds(x, y, z, h); x += z + gap;
     muteButton.setBounds(x, y, z, h);  y += h + gap; x = 20;
     loopStartEndButton.setBounds(x, y, z + 20, h); x += z + (3 * gap);
@@ -496,4 +499,38 @@ void Player::selectTrack(int index)
         transportSource.start();
     }
     currentTrackIndex = index;
+}
+
+void Player::saveLast()
+{
+    if (!readerSource) return;
+
+    juce::File sessionFile = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+                             .getChildFile("last_session.txt");
+
+    juce::String filePath = playlistFiles.isEmpty() ? "" : playlistFiles[currentTrackIndex].getFullPathName();
+    double position = transportSource.getCurrentPosition();
+
+    juce::String content = filePath + "\n" + juce::String(position);
+    sessionFile.replaceWithText(content);
+}
+void Player::loadLast()
+{
+    juce::File sessionFile = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+                             .getChildFile("last_session.txt");
+
+    if (!sessionFile.existsAsFile()) return;
+
+    juce::StringArray lines = juce::StringArray::fromLines(sessionFile.loadFileAsString());
+    if (lines.size() < 2) return;
+
+    juce::File lastFile(lines[0]);
+    double lastPosition = lines[1].getDoubleValue();
+
+    if (lastFile.existsAsFile())
+    {
+        juce::Array<juce::File> single{ lastFile };
+        loadPlaylistFiles(single);
+        transportSource.setPosition(lastPosition);
+    }
 }

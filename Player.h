@@ -25,6 +25,7 @@ public:
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill);
     void releaseResources();
 
+
     // Time
     void timerCallback() override;
 
@@ -74,6 +75,9 @@ private:
     int currentTrackIndex = -1;
     void loadPlaylistFiles(const juce::Array<juce::File>& files);
     void selectTrack(int index);
+    void saveLast();
+    void loadLast();
+
 
     std::unique_ptr<juce::FileChooser> fileChooser;
 
