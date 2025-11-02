@@ -1,5 +1,7 @@
 #pragma once
 #include <JuceHeader.h>
+#include<vector>
+using namespace std;
 
 class Player : public juce::AudioAppComponent,
     public juce::Button::Listener,
@@ -50,11 +52,18 @@ private:
     juce::TextButton muteButton{ "Mute" };
     juce::TextButton loopStartEndButton{ "values to loop" };
     juce::TextButton loadPlaylistButton{ "Load playlist" };
+    juce::TextButton markerButton{ "Add Marker" };
+	juce::TextButton getmarkerButton{ "Get Marker" };
     juce::TextButton forwardButton{ " +10s" };
     juce::TextButton backwardButton{ " -10s" };
+	juce::TextEditor setMarker;
     juce::TextEditor setStart;
     juce::TextEditor setEnd;
     juce::TextEditor repeat_times;
+
+    vector <double> marks;
+    int order;
+    
     juce::Label speedLabel;
     juce::Label positionLabel;
     juce::Label volumeLabel;
