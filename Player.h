@@ -53,17 +53,21 @@ private:
     juce::TextButton loopStartEndButton{ "values to loop" };
     juce::TextButton loadPlaylistButton{ "Load playlist" };
     juce::TextButton markerButton{ "Add Marker" };
-	juce::TextButton getmarkerButton{ "Get Marker" };
+    juce::TextButton getmarkerButton{ "Get Marker" };
     juce::TextButton forwardButton{ " +10s" };
     juce::TextButton backwardButton{ " -10s" };
-	juce::TextEditor setMarker;
+    juce::TextButton favoriteButton{ "Add to Fav" };
+    juce::TextEditor setMarker;
     juce::TextEditor setStart;
     juce::TextEditor setEnd;
     juce::TextEditor repeat_times;
 
+    int lastStartClickTime = 0;
+    int lastEndClickTime = 0;
+
     vector <double> marks;
     int order;
-    
+
     juce::Label speedLabel;
     juce::Label positionLabel;
     juce::Label volumeLabel;
