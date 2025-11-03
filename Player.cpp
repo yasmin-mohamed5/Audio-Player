@@ -98,14 +98,14 @@ void Player::paint(juce::Graphics& g)
 
     if (total > 0.0)
     {
-        g.setColour(juce::Colours::deepskyblue);
+        g.setColour(juce::Colours::deepskyblue); 
         // draw only channel 0 (single waveform)
         thumbnail.drawChannel(g, waveformArea, 0.0, total, 0, 0.8f);
 
         double currentTime = transportSource.getCurrentPosition();
         float x = waveformArea.getX() + (float)((currentTime / total) * waveformArea.getWidth());
 
-        g.setColour(juce::Colours::black);
+        g.setColour(juce::Colours::black); 
         g.drawLine(x, waveformArea.getY(), x, waveformArea.getBottom(), 3.0f);
 
         double Time = transportSource.getCurrentPosition();
@@ -127,20 +127,20 @@ void Player::paint(juce::Graphics& g)
         int textX = waveformArea.getX();
         int textY = waveformArea.getBottom() + 5;
 
-        g.setColour(juce::Colours::white);
+        g.setColour(juce::Colours::white); 
         g.setFont(14.0f);
         g.drawText(timeText, textX, textY, 80, 20, juce::Justification::left);
 
     }
     else
     {
-        g.setColour(juce::Colours::deepskyblue);
+        g.setColour(juce::Colours::deepskyblue); 
         g.drawRect(waveformArea, 2);
         g.setColour(juce::Colours::white);
         g.drawText("Load the sound", waveformArea, juce::Justification::centred, false);
     }
 	// draw markers
-    g.setColour(juce::Colours::white);
+    g.setColour(juce::Colours::white); 
     double lengthInSeconds = transportSource.getLengthInSeconds();
     for (auto markTime : marks)
     {
