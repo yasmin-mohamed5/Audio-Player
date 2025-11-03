@@ -4,7 +4,7 @@ Player::Player()
 {
     formatManager.registerBasicFormats();
 
-	for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton, &muteButton, &loopButton, &loopStartEndButton, &loadPlaylistButton, &markerButton, &getmarkerButton, &forwardButton, &backwardButton })
+    for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton, &muteButton, &loopButton, &loopStartEndButton, &loadPlaylistButton, &markerButton, &getmarkerButton, &forwardButton, &backwardButton, &favoriteButton })
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -37,16 +37,16 @@ Player::Player()
     addAndMakeVisible(speedSlider);
     addAndMakeVisible(speedLabel);
     addAndMakeVisible(positionLabel);
-    addAndMakeVisible( volumeLabel);
+    addAndMakeVisible(volumeLabel);
     addAndMakeVisible(metadataLable);
     thumbnail.addChangeListener(this);
 
-	addAndMakeVisible(setMarker);
+    addAndMakeVisible(setMarker);
     addAndMakeVisible(setStart);
     addAndMakeVisible(setEnd);
     addAndMakeVisible(repeat_times);
 
-	setMarker.setTextToShowWhenEmpty("order", juce::Colours::grey);
+    setMarker.setTextToShowWhenEmpty("order", juce::Colours::grey);
     setStart.setTextToShowWhenEmpty("Start", juce::Colours::grey);
     setEnd.setTextToShowWhenEmpty("End", juce::Colours::grey);
     repeat_times.setTextToShowWhenEmpty("Repeat", juce::Colours::grey);
@@ -139,14 +139,14 @@ void Player::paint(juce::Graphics& g)
         g.setColour(juce::Colours::white);
         g.drawText("Load the sound", waveformArea, juce::Justification::centred, false);
     }
-	// draw markers
+    // draw markers
     g.setColour(juce::Colours::white);
     double lengthInSeconds = transportSource.getLengthInSeconds();
     for (auto markTime : marks)
     {
 
         float x = waveformArea.getX() + (float)((markTime / lengthInSeconds) * waveformArea.getWidth());
-		// startX , startY , endX , endY , thickness
+        // startX , startY , endX , endY , thickness
         g.drawLine(x, (float)waveformArea.getY(), x, (float)waveformArea.getBottom(), 2.0f);
     }
 }
@@ -180,8 +180,9 @@ void Player::resized()
     setEnd.setBounds(x, y, 40, h); x += 45;
     repeat_times.setBounds(x, y, z, h); x += z + gap;
     markerButton.setBounds(x, y, z, h); x += z + gap;
-	getmarkerButton.setBounds(x, y, z, h); x += z + gap;
-	setMarker.setBounds(x, y, 40, h); x += z + gap;
+    getmarkerButton.setBounds(x, y, z, h); x += z + gap;
+    setMarker.setBounds(x, y, 40, h); x += z + gap;
+    favoriteButton.setBounds(x, y, z, h); x += z + gap;
 
     volumeSlider.setBounds(50, 180, getWidth() - 60, 30);
     timeSlider.setBounds(50, 220, getWidth() - 60, 30);
@@ -214,16 +215,16 @@ void Player::buttonClicked(juce::Button* button)
     }
     if (button == &loadButton) {
         fileChooser = std::make_unique<juce::FileChooser>(
-            "Select an audio file...", juce::File{},"*.wav;*.mp3");
+            "Select an audio file...", juce::File{}, "*.wav;*.mp3");
 
         fileChooser->launchAsync(
             juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
             [this](const juce::FileChooser& fc)
             {
                 auto file = fc.getResult();
-                if (file.existsAsFile()){
-                juce::Array<juce::File> single{ file };
-                loadPlaylistFiles(single);
+                if (file.existsAsFile()) {
+                    juce::Array<juce::File> single{ file };
+                    loadPlaylistFiles(single);
 
                     if (auto* reader = formatManager.createReaderFor(file))
                     {
@@ -294,15 +295,44 @@ void Player::buttonClicked(juce::Button* button)
         transportSource.setPosition(0.0);
     }
     else if (button == &startButton) {
-        transportSource.setPosition(0.0);
+        auto now = juce::Time::getMillisecondCounter();
+
+        if (now - lastStartClickTime < 1000) // double press within 1s
+        {
+            // Previous track
+            if (currentTrackIndex > 0)
+                selectTrack(currentTrackIndex - 1);
+        }
+        else
+        {
+            // Normal single press: jump to start of current track
+            transportSource.setPosition(0.0);
+        }
+        lastStartClickTime = now;        
     }
     else if (button == &endButton) {
-        if (readerSource != nullptr) {
-            double lengthInSeconds = transportSource.getLengthInSeconds();
-            transportSource.setPosition(lengthInSeconds); // jump to end
+        auto now = juce::Time::getMillisecondCounter();
+
+        if (now - lastEndClickTime < 1000) // double press within 1s
+        {
+            // Next track
+            if (currentTrackIndex + 1 < playlistFiles.size())
+                selectTrack(currentTrackIndex + 1);
         }
+        else
+        {
+            // Normal single press: jump to end of current track
+            if (readerSource != nullptr)
+            {
+                double lengthInSeconds = transportSource.getLengthInSeconds();
+                transportSource.setPosition(lengthInSeconds);
+            }
+        }
+
+        lastEndClickTime = now;
+
     }
-    else if (button == &muteButton){
+    else if (button == &muteButton) {
         if (!isMuted)
         {
             previousGain = (float)volumeSlider.getValue();
@@ -312,7 +342,7 @@ void Player::buttonClicked(juce::Button* button)
             muteButton.setButtonText("Unmute");
             DBG("Muted, previousGain=" << previousGain);
         }
-        else{
+        else {
             transportSource.setGain(previousGain);
             volumeSlider.setValue(previousGain, juce::dontSendNotification);
             isMuted = false;
@@ -365,12 +395,12 @@ void Player::buttonClicked(juce::Button* button)
         }
     }
     else if (button == &markerButton) {
-		marks.push_back(transportSource.getCurrentPosition());
+        marks.push_back(transportSource.getCurrentPosition());
         repaint();
     }
     else if (button == &getmarkerButton) {
-		order = setMarker.getText().getIntValue();
-        if(!setMarker.isEmpty()){
+        order = setMarker.getText().getIntValue();
+        if (!setMarker.isEmpty()) {
             if (order > 0 && order <= marks.size()) {
                 transportSource.setPosition(marks[order - 1]);
                 transportSource.start();
@@ -378,19 +408,53 @@ void Player::buttonClicked(juce::Button* button)
             else {
                 setMarker.clear();
             }
-		}
+        }
 
     }
-    else if (button == &forwardButton){
+    else if (button == &forwardButton) {
         double current = transportSource.getCurrentPosition();
         double total = transportSource.getLengthInSeconds();
         transportSource.setPosition(std::min(current + 10.0, total));
     }
-    else if (button == &backwardButton){
+    else if (button == &backwardButton) {
         double current = transportSource.getCurrentPosition();
         transportSource.setPosition(std::max(current - 10.0, 0.0));
     }
+    else if (button == &favoriteButton)
+    {
+        if (currentTrackIndex >= 0 && currentTrackIndex < playlistFiles.size())
+        {
+            auto file = playlistFiles[currentTrackIndex];
 
+            // Define the favorites folder (inside user’s Documents, for example)
+            juce::File favoritesFolder = juce::File::getSpecialLocation(
+                juce::File::userDocumentsDirectory).getChildFile("Favorites");
+
+            if (!favoritesFolder.exists())
+                favoritesFolder.createDirectory();  // make sure folder exists
+
+            // Copy the file into Favorites
+            juce::File destFile = favoritesFolder.getChildFile(file.getFileName());
+
+            auto result = file.copyFileTo(destFile);
+
+        if (result)
+        {
+            juce::AlertWindow::showMessageBoxAsync(
+            juce::AlertWindow::InfoIcon,
+            "Favorite Added",
+            "The song has been added to Favorites successfully!");
+        }
+        else
+        {
+            juce::AlertWindow::showMessageBoxAsync(
+            juce::AlertWindow::WarningIcon,
+            "Error",
+            "Failed to add the song to Favorites.");
+        }
+
+        }
+    }
 }
 
 void Player::sliderValueChanged(juce::Slider* slider)
@@ -534,6 +598,7 @@ void Player::selectTrack(int index)
         transportSource.start();
     }
     currentTrackIndex = index;
+    playlistBox.setSelectedId(index + 1, juce::dontSendNotification);
 }
 
 void Player::saveLast()
@@ -541,7 +606,7 @@ void Player::saveLast()
     if (!readerSource) return;
 
     juce::File sessionFile = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
-                             .getChildFile("last_session.txt");
+        .getChildFile("last_session.txt");
 
     juce::String filePath = playlistFiles.isEmpty() ? "" : playlistFiles[currentTrackIndex].getFullPathName();
     double position = transportSource.getCurrentPosition();
@@ -552,7 +617,7 @@ void Player::saveLast()
 void Player::loadLast()
 {
     juce::File sessionFile = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
-                             .getChildFile("last_session.txt");
+        .getChildFile("last_session.txt");
 
     if (!sessionFile.existsAsFile()) return;
 
