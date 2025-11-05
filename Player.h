@@ -50,7 +50,7 @@ private:
     juce::TextButton stopButton{ "Stop" };
     juce::TextButton loopButton{ "Loop" };
     juce::TextButton muteButton{ "Mute" };
-    juce::TextButton loopStartEndButton{ "values to loop" };
+    juce::TextButton loopStartEndButton{ "Values to loop" };
     juce::TextButton loadPlaylistButton{ "Load playlist" };
     juce::TextButton markerButton{ "Add Marker" };
     juce::TextButton getmarkerButton{ "Get Marker" };
@@ -59,6 +59,7 @@ private:
     juce::TextButton pinnButton{ "pin" };
     juce::TextButton favoriteButton{ "Add to Fav" };
     juce::TextButton themeButton{ "Dark" };
+    juce::TextButton clearButton{ " Clear" };
     juce::TextEditor setMarker;
     juce::TextEditor setStart;
     juce::TextEditor setEnd;
@@ -93,7 +94,7 @@ private:
     void saveLast();
     void loadLast();
     bool pinned = true;
-
+    bool cleared = false;
 
     std::unique_ptr<juce::FileChooser> fileChooser;
 
