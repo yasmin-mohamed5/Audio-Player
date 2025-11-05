@@ -56,6 +56,7 @@ private:
     juce::TextButton getmarkerButton{ "Get Marker" };
     juce::TextButton forwardButton{ " +10s" };
     juce::TextButton backwardButton{ " -10s" };
+    juce::TextButton pinnButton{ "pinn" };
     juce::TextButton favoriteButton{ "Add to Fav" };
     juce::TextButton themeButton{ "Dark" };
     juce::TextEditor setMarker;
@@ -91,6 +92,7 @@ private:
     void selectTrack(int index);
     void saveLast();
     void loadLast();
+    bool pinned = true;
 
 
     std::unique_ptr<juce::FileChooser> fileChooser;
