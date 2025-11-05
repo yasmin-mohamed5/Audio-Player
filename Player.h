@@ -56,7 +56,7 @@ private:
     juce::TextButton getmarkerButton{ "Get Marker" };
     juce::TextButton forwardButton{ " +10s" };
     juce::TextButton backwardButton{ " -10s" };
-    juce::TextButton pinnButton{ "pinn" };
+    juce::TextButton pinnButton{ "pin" };
     juce::TextButton favoriteButton{ "Add to Fav" };
     juce::TextButton themeButton{ "Dark" };
     juce::TextEditor setMarker;
