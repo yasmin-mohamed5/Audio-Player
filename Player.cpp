@@ -4,7 +4,7 @@ Player::Player()
 {
     formatManager.registerBasicFormats();
 
-    for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton, &muteButton, &loopButton, &loopStartEndButton, &loadPlaylistButton, &markerButton, &getmarkerButton, &forwardButton, &backwardButton, &favoriteButton, &themeButton, &pinnButton })
+    for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton, &muteButton, &loopButton, &loopStartEndButton, &loadPlaylistButton, &markerButton, &getmarkerButton, &forwardButton, &backwardButton, &favoriteButton, &themeButton, &pinnButton, &clearButton })
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -42,12 +42,12 @@ Player::Player()
     addAndMakeVisible(metadataLable);
     thumbnail.addChangeListener(this);
 
-	addAndMakeVisible(setMarker);
+    addAndMakeVisible(setMarker);
     addAndMakeVisible(setStart);
     addAndMakeVisible(setEnd);
     addAndMakeVisible(repeat_times);
 
-	setMarker.setTextToShowWhenEmpty("order", juce::Colours::grey);
+    setMarker.setTextToShowWhenEmpty("order", juce::Colours::grey);
     setStart.setTextToShowWhenEmpty("Start", juce::Colours::grey);
     setEnd.setTextToShowWhenEmpty("End", juce::Colours::grey);
     repeat_times.setTextToShowWhenEmpty("Repeat", juce::Colours::grey);
@@ -71,8 +71,9 @@ Player::Player()
     endPoint = 0.0;
     repeatedTimes = -1;
     order = -1;
-	theme = false;
+    theme = false;
 
+    cleared = false;
     loadLast();
 }
 
@@ -99,7 +100,7 @@ void Player::releaseResources()
 
 void Player::paint(juce::Graphics& g)
 {
-	// background color
+    // background color
     if (theme) {
         g.fillAll(juce::Colours::lightgrey);
     }
@@ -116,7 +117,7 @@ void Player::paint(juce::Graphics& g)
     {
         // waveform color
         if (theme) {
-			g.setColour(juce::Colours::deepskyblue);
+            g.setColour(juce::Colours::deepskyblue);
         }
         else {
             g.setColour(juce::Colours::darkblue);
@@ -162,7 +163,7 @@ void Player::paint(juce::Graphics& g)
         int textX = waveformArea.getX();
         int textY = waveformArea.getBottom() + 5;
 
-         // time text color in min:sec
+        // time text color in min:sec
         if (theme) {
             g.setColour(juce::Colours::black);
         }
@@ -178,14 +179,14 @@ void Player::paint(juce::Graphics& g)
     {
         // waveform area color
         if (theme) {
-			g.setColour(juce::Colours::deepskyblue);
+            g.setColour(juce::Colours::deepskyblue);
         }
         else {
             g.setColour(juce::Colours::blue);
         }
         g.drawRect(waveformArea, 2);
 
-		// text color in waveform area before loading sound
+        // text color in waveform area before loading sound
         if (theme) {
             g.setColour(juce::Colours::black);
         }
@@ -194,7 +195,7 @@ void Player::paint(juce::Graphics& g)
         }
         g.drawText("Load the sound", waveformArea, juce::Justification::centred, false);
     }
-	// draw markers
+    // draw markers
     if (theme) { //marker color
         g.setColour(juce::Colours::black);
     }
@@ -206,7 +207,7 @@ void Player::paint(juce::Graphics& g)
     {
 
         float x = waveformArea.getX() + (float)((markTime / lengthInSeconds) * waveformArea.getWidth());
-		// startX , startY , endX , endY , thickness
+        // startX , startY , endX , endY , thickness
         g.drawLine(x, (float)waveformArea.getY(), x, (float)waveformArea.getBottom(), 2.0f);
     }
 }
@@ -241,10 +242,11 @@ void Player::resized()
     repeat_times.setBounds(x, y, z, h); x += z + gap;
     favoriteButton.setBounds(x, y, z, h); y += h + gap; x = 20;
     markerButton.setBounds(x, y, z, h); x += z + gap;
-	getmarkerButton.setBounds(x, y, z, h); x += z + gap;
-	setMarker.setBounds(x, y, 40, h); x += z + gap-40;
+    getmarkerButton.setBounds(x, y, z, h); x += z + gap;
+    setMarker.setBounds(x, y, 40, h); x += z + gap - 40;
     themeButton.setBounds(x, y, z, h); x += z + gap;
     pinnButton.setBounds(x, y, z, h); x += z + gap;
+    clearButton.setBounds(x, y, z, h); x += z + gap;
 
     volumeSlider.setBounds(50, 180, getWidth() - 60, 30);
     timeSlider.setBounds(50, 220, getWidth() - 60, 30);
@@ -285,8 +287,8 @@ void Player::buttonClicked(juce::Button* button)
             {
                 auto file = fc.getResult();
                 if (file.existsAsFile()) {
-                juce::Array<juce::File> single{ file };
-                loadPlaylistFiles(single);
+                    juce::Array<juce::File> single{ file };
+                    loadPlaylistFiles(single);
 
                     if (auto* reader = formatManager.createReaderFor(file))
                     {
@@ -368,8 +370,8 @@ void Player::buttonClicked(juce::Button* button)
         else
         {
             // Normal single press: jump to start of current track
-        transportSource.setPosition(0.0);
-    }
+            transportSource.setPosition(0.0);
+        }
         lastStartClickTime = now;
     }
     else if (button == &endButton) {
@@ -386,10 +388,10 @@ void Player::buttonClicked(juce::Button* button)
             // Normal single press: jump to end of current track
             if (readerSource != nullptr)
             {
-            double lengthInSeconds = transportSource.getLengthInSeconds();
+                double lengthInSeconds = transportSource.getLengthInSeconds();
                 transportSource.setPosition(lengthInSeconds);
+            }
         }
-    }
 
         lastEndClickTime = now;
 
@@ -457,11 +459,11 @@ void Player::buttonClicked(juce::Button* button)
         }
     }
     else if (button == &markerButton) {
-		marks.push_back(transportSource.getCurrentPosition());
+        marks.push_back(transportSource.getCurrentPosition());
         repaint();
     }
     else if (button == &getmarkerButton) {
-		order = setMarker.getText().getIntValue();
+        order = setMarker.getText().getIntValue();
         if (!setMarker.isEmpty()) {
             if (order > 0 && order <= marks.size()) {
                 transportSource.setPosition(marks[order - 1]);
@@ -470,7 +472,7 @@ void Player::buttonClicked(juce::Button* button)
             else {
                 setMarker.clear();
             }
-		}
+        }
 
     }
     else if (button == &forwardButton) {
@@ -500,20 +502,20 @@ void Player::buttonClicked(juce::Button* button)
 
             auto result = file.copyFileTo(destFile);
 
-        if (result)
-        {
-            juce::AlertWindow::showMessageBoxAsync(
-            juce::AlertWindow::InfoIcon,
-            "Favorite Added",
-            "The song has been added to Favorites successfully!");
-        }
-        else
-        {
-            juce::AlertWindow::showMessageBoxAsync(
-            juce::AlertWindow::WarningIcon,
-            "Error",
-            "Failed to add the song to Favorites.");
-        }
+            if (result)
+            {
+                juce::AlertWindow::showMessageBoxAsync(
+                    juce::AlertWindow::InfoIcon,
+                    "Favorite Added",
+                    "The song has been added to Favorites successfully!");
+            }
+            else
+            {
+                juce::AlertWindow::showMessageBoxAsync(
+                    juce::AlertWindow::WarningIcon,
+                    "Error",
+                    "Failed to add the song to Favorites.");
+            }
 
         }
     }
@@ -521,7 +523,7 @@ void Player::buttonClicked(juce::Button* button)
         theme = !theme;
         if (theme) {
             themeButton.setButtonText("light");
-			// value text color
+            // value text color
             volumeSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colours::black);
             timeSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colours::black);
             speedSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colours::black);
@@ -534,7 +536,8 @@ void Player::buttonClicked(juce::Button* button)
             speedSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colours::white);
         }
         repaint();
-    }else if (button == &pinnButton)
+    }
+    else if (button == &pinnButton)
     {
         pinned = false;
         if (currentTrackIndex >= 0 && currentTrackIndex < playlistFiles.size())
@@ -544,7 +547,7 @@ void Player::buttonClicked(juce::Button* button)
 
             // write session file
             juce::File sessionFile = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
-                                     .getChildFile("last_session.txt");
+                .getChildFile("last_session.txt");
             juce::String content = currentFile.getFullPathName() + "\n" + juce::String(pos);
             sessionFile.replaceWithText(content);
 
@@ -552,10 +555,29 @@ void Player::buttonClicked(juce::Button* button)
 
         }
     }
+    else if (button == &clearButton)
+    {
+        // Stop playback
+        transportSource.stop();
+        transportSource.setSource(nullptr);
+        readerSource.reset();
 
+        // Clear playlist and UI
+        playlistFiles.clear();
+        playlistBox.clear();
+        metadataLable.setText("", juce::dontSendNotification);
+        thumbnail.clear();
 
+        // Reset state
+        currentTrackIndex = -1;
+        cleared = true;
+        clearButton.setButtonText("Cleared");
+        juce::File sessionFile = juce::File::getSpecialLocation(
+            juce::File::userApplicationDataDirectory).getChildFile("last_session.txt");
+
+        sessionFile.replaceWithText("CLEARED");
+    }
 }
-
 void Player::sliderValueChanged(juce::Slider* slider)
 {
     if (slider == &volumeSlider) {
@@ -580,9 +602,9 @@ void Player::sliderValueChanged(juce::Slider* slider)
         resampleSource.setResamplingRatio(speed);
     }
 }
-
 void Player::loadPlaylistFiles(const juce::Array<juce::File>& files)
 {
+    cleared = false;
     // Clear previous playlist and UI
     playlistFiles.clear();
     playlistBox.clear();
@@ -606,7 +628,6 @@ void Player::loadPlaylistFiles(const juce::Array<juce::File>& files)
     // Switch to first track
     selectTrack(currentTrackIndex);
 }
-
 void Player::timerCallback()
 {
     // update the time slider to reflect current playback position
@@ -699,14 +720,13 @@ void Player::selectTrack(int index)
     currentTrackIndex = index;
     playlistBox.setSelectedId(index + 1, juce::dontSendNotification);
 }
-
 void Player::saveLast()
 {
-    if (pinned) {
+    if (!cleared && pinned) {
         if (!readerSource) return;
 
-        juce::File sessionFile = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
-                                 .getChildFile("last_session.txt");
+        juce::File sessionFile = juce::File::getSpecialLocation(
+            juce::File::userApplicationDataDirectory).getChildFile("last_session.txt");
 
         juce::String filePath = playlistFiles.isEmpty() ? "" : playlistFiles[currentTrackIndex].getFullPathName();
         double position = transportSource.getCurrentPosition();
@@ -714,29 +734,31 @@ void Player::saveLast()
         juce::String content = filePath + "\n" + juce::String(position);
         sessionFile.replaceWithText(content);
     }
-
 }
 void Player::loadLast()
-{   if (pinned) {
-    juce::File sessionFile = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
-                             .getChildFile("last_session.txt");
+{
+    juce::File sessionFile = juce::File::getSpecialLocation(
+        juce::File::userApplicationDataDirectory).getChildFile("last_session.txt");
 
     if (!sessionFile.existsAsFile()) return;
 
-    juce::StringArray lines = juce::StringArray::fromLines(sessionFile.loadFileAsString());
-    if (lines.size() < 2) return;
+    juce::String content = sessionFile.loadFileAsString().trim();
 
-    juce::File lastFile(lines[0]);
-    double lastPosition = lines[1].getDoubleValue();
-
-    if (lastFile.existsAsFile())
-    {
-        juce::Array<juce::File> single{ lastFile };
-        loadPlaylistFiles(single);
-        transportSource.setPosition(lastPosition);
+    if (content == "CLEARED") {
+        return;
     }
+    if (!cleared && pinned) {
+        juce::StringArray lines = juce::StringArray::fromLines(content);
+        if (lines.size() < 2) return;
 
-}
+        juce::File lastFile(lines[0]);
+        double lastPosition = lines[1].getDoubleValue();
 
-
+        if (lastFile.existsAsFile())
+        {
+            juce::Array<juce::File> single{ lastFile };
+            loadPlaylistFiles(single);
+            transportSource.setPosition(lastPosition);
+        }
+    }
 }
