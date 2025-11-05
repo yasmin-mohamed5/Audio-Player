@@ -567,14 +567,15 @@ void Player::buttonClicked(juce::Button* button)
         playlistBox.clear();
         metadataLable.setText("", juce::dontSendNotification);
         thumbnail.clear();
+        timeSlider.setValue(0.0);
 
         // Reset state
         currentTrackIndex = -1;
         cleared = true;
         clearButton.setButtonText("Cleared");
+
         juce::File sessionFile = juce::File::getSpecialLocation(
             juce::File::userApplicationDataDirectory).getChildFile("last_session.txt");
-
         sessionFile.replaceWithText("CLEARED");
     }
 }
