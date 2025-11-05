@@ -568,6 +568,10 @@ void Player::buttonClicked(juce::Button* button)
         metadataLable.setText("", juce::dontSendNotification);
         thumbnail.clear();
         timeSlider.setValue(0.0);
+        volumeSlider.setValue(0.5, juce::dontSendNotification);
+        transportSource.setGain(0.5f);
+        speedSlider.setValue(1.0, juce::dontSendNotification);
+        resampleSource.setResamplingRatio(1.0f);
 
         // Reset state
         currentTrackIndex = -1;
