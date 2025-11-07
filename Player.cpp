@@ -427,23 +427,31 @@ void Player::buttonClicked(juce::Button* button)
         startPoint = setStart.getText().getDoubleValue();
         endPoint = setEnd.getText().getDoubleValue();
         repeatedTimes = repeat_times.getText().getIntValue();
-        if (repeat_times.isEmpty()) {
+        if (repeat_times.isEmpty() || repeatedTimes <= 0) {
             repeatedTimes = -1;
+            repeat_times.clear();
         }
         if (startPoint == endPoint) {
             isLooping = false;
         }
         double lengthInSeconds = transportSource.getLengthInSeconds();
-        if (startPoint < 0) {
+        if (startPoint < 0 || startPoint >= lengthInSeconds ){
             startPoint = 0;
+            setStart.setText("0", juce::dontSendNotification);
         }
-        if (endPoint > lengthInSeconds) {
+        if (endPoint > lengthInSeconds || endPoint <= 0) {
             endPoint = lengthInSeconds;
+            int currentMinutes = (int)endPoint / 60;
+            int currentSeconds = ((int)endPoint) % 60;
+			setEnd.setText(juce::String(currentMinutes) + ":" +
+                juce::String(currentSeconds), juce::dontSendNotification);
         }
         if (startPoint > endPoint) {
             double x = startPoint;
             startPoint = endPoint;
             endPoint = x;
+			setStart.setText(juce::String(startPoint), juce::dontSendNotification);
+			setEnd.setText(juce::String(endPoint), juce::dontSendNotification);
         }
         if (isLooping) {
             loopStartEndButton.setButtonText("Looping");
