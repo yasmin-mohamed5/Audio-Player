@@ -12,6 +12,8 @@ class Player : public MainComponent,
 {
 public:
 
+
+
     Player();
     ~Player() override;
 
@@ -40,10 +42,8 @@ public:
     void saveLast();
     void loadLast();
 
-    int nextShuffled();
-
-    juce::AudioTransportSource& getTransportSource(); //
-    juce::AudioThumbnail& getThumbnail(); //
+    juce::AudioTransportSource& getTransportSource();
+    juce::AudioThumbnail& getThumbnail();
     juce::AudioFormatManager& getFormatManager();
     juce::AudioSource* getAudioSource();
 
@@ -60,14 +60,17 @@ public:
 
 
 private:
+    
+
 
     int order;
     double startPoint, endPoint;
-    bool isLooping; //theme
+    bool isLooping;
     bool is_restartLoop;
     int repeatedTimes;
     bool isMuted;
     float previousGain;
+
 
     int currentTrackIndex = -1;
     void selectTrack(int index);

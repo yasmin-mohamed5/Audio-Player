@@ -41,7 +41,10 @@ protected:
     juce::TextButton favoriteButton{ "Add to Fav" };
     juce::TextButton themeButton{ "Dark" };
     juce::TextButton clearButton{ " Clear" };
-
+    juce::TextButton shuffleButton{ "Shuffle" }; // add to the GUI init list
+    bool isShuffling = false;
+    std::vector<int> shuffleOrder;
+    size_t shufflePosition = 0;
     juce::ComboBox playlistBox;
 
     juce::TextEditor setMarker;
