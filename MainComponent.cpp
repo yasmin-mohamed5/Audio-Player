@@ -68,7 +68,6 @@ MainComponent::~MainComponent()
 {
     shutdownAudio();
 }
- 
 
 void MainComponent::paint(juce::Graphics& g)
 {
@@ -230,6 +229,7 @@ void MainComponent::resized()
     themeButton.setBounds(x, y, z, h); x += z + gap;
     pinnButton.setBounds(x, y, z, h); x += z + gap;
     clearButton.setBounds(x, y, z, h); x += z + gap;
+    shuffleButton.setBounds(x, y, z, h); x += z + gap;
 
     volumeSlider.setBounds(50, 180, getWidth() - 60, 30);
     timeSlider.setBounds(50, 220, getWidth() - 60, 30);
