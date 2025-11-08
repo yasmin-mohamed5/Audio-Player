@@ -4,7 +4,6 @@
 #include<vector>
 using namespace std;
 
-
 class Player : public MainComponent,
     public juce::Timer,
     public juce::ChangeListener,
@@ -13,11 +12,8 @@ class Player : public MainComponent,
 {
 public:
 
-
-
     Player();
     ~Player() override;
-	// made functions public for easier access in MainComponent
 
      // Event handlers
     void buttonClicked(juce::Button* button) override;
@@ -38,8 +34,13 @@ public:
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
     void loadPlaylistFiles(const juce::Array<juce::File>& files);
 
+    void buildShuffle();        // create shuffled order for current playlist
+    int nextShuffledIndex();    // returns the next index from shuffleOrder or -1
+    void startShuffle(int index);// align shufflePosition with a given currently playing track
     void saveLast();
     void loadLast();
+
+    int nextShuffled();
 
     juce::AudioTransportSource& getTransportSource(); //
     juce::AudioThumbnail& getThumbnail(); //
@@ -51,26 +52,15 @@ public:
     bool isLoopingEnabled() const;
     int getRepeatedTimes() const;
     void resetLoop();
+    bool hasTriggeredNext = false;
+
+    // in Player.h
+    uint32 lastManualJumpTime = 0; // new
+
 
 
 private:
-    
 
-    //juce::AudioThumbnail thumbnail{ 512, formatManager, thumbnailCache };
-    // Audio
-    /*juce::AudioFormatManager formatManager;
-    std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
-    juce::AudioTransportSource transportSource;
-    juce::ResamplingAudioSource resampleSource{ &transportSource, false, 2 };
-    juce::AudioThumbnailCache thumbnailCache{ 10 };
-    juce::AudioThumbnail thumbnail{ 512, formatManager, thumbnailCache };
-
-    juce::Array<juce::File> playlistFiles;
-    int currentTrackIndex = -1;
-    int lastStartClickTime = 0;
-    int lastEndClickTime = 0;*/
-
-    //vector <double> marks; //
     int order;
     double startPoint, endPoint;
     bool isLooping; //theme
@@ -79,11 +69,7 @@ private:
     bool isMuted;
     float previousGain;
 
-
-    /*juce::Array<juce::File> playlistFiles;*/
-
     int currentTrackIndex = -1;
-
     void selectTrack(int index);
     bool pinned;
     bool cleared;

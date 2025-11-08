@@ -1,9 +1,11 @@
 #include"Player.h"
+#include <random>
+#include <algorithm>
 
 
 Player::Player()
 {
-    for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton, &muteButton, &loopButton, &loopStartEndButton, &loadPlaylistButton, &markerButton, &getmarkerButton, &forwardButton, &backwardButton, &favoriteButton, &themeButton, &pinnButton, &clearButton })
+    for (auto* btn : { &loadButton, &restartButton, &stopButton, &playButton, &pauseButton, &startButton, &endButton, &muteButton, &loopButton, &loopStartEndButton, &loadPlaylistButton, &markerButton, &getmarkerButton, &forwardButton, &backwardButton, &favoriteButton, &themeButton, &pinnButton, &clearButton, &shuffleButton })
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -32,6 +34,49 @@ Player::~Player() {
     stopTimer();
     shutdownAudio();
     saveLast();
+}
+
+#include <random> // at top of Player.cpp
+
+void Player::buildShuffle()
+{
+    shuffleOrder.clear();
+    int n = playlistFiles.size();
+    if (n == 0) return;
+    shuffleOrder.reserve(n);
+    for (int i = 0; i < n; ++i) shuffleOrder.push_back(i);
+
+    // Shuffle using std::shuffle + random_device
+    random_device rd;
+    mt19937 g(rd());
+    shuffle(shuffleOrder.begin(), shuffleOrder.end(), g);
+
+    // Ensure the currently playing track is placed at current position
+    if (currentTrackIndex >= 0)
+        startShuffle(currentTrackIndex);
+}
+
+void Player::startShuffle(int index)
+{
+    // Find current track in shuffleOrder and set shufflePosition to it
+    for (int i = 0; i < shuffleOrder.size(); ++i)
+    {
+        if (shuffleOrder[i] == index)
+        {
+            shufflePosition = i;
+            return;
+        }
+    }
+    // If not found (rare), set position to 0
+    shufflePosition = 0;
+}
+
+int Player::nextShuffledIndex()
+{
+    if (shuffleOrder.empty()) return -1;
+    // advance position (wrap)
+    shufflePosition = (shufflePosition + 1) % shuffleOrder.size();
+    return shuffleOrder[shufflePosition];
 }
 
 void Player::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
@@ -70,6 +115,7 @@ void Player::buttonClicked(juce::Button* button)
                     return;
 
                 loadPlaylistFiles(files);
+                buildShuffle();
             });
         return;
     }
@@ -173,24 +219,28 @@ void Player::buttonClicked(juce::Button* button)
     else if (button == &endButton) {
         auto now = juce::Time::getMillisecondCounter();
 
-        if (now - lastEndClickTime < 1000) // double press within 1s
+        if (now - lastEndClickTime < 500) // double click: next track
         {
-            // Next track
-            if (currentTrackIndex + 1 < playlistFiles.size())
-                selectTrack(currentTrackIndex + 1);
+            int nextIndex = -1;
+            if (isShuffling && playlistFiles.size() > 1)
+                nextIndex = nextShuffledIndex();
+            else if (currentTrackIndex + 1 < playlistFiles.size())
+                nextIndex = currentTrackIndex + 1;
+
+            if (nextIndex >= 0)
+                selectTrack(nextIndex);
         }
-        else
+        else // single click: go to end of current track
         {
-            // Normal single press: jump to end of current track
             if (readerSource != nullptr)
             {
                 double lengthInSeconds = transportSource.getLengthInSeconds();
-                transportSource.setPosition(lengthInSeconds);
+                transportSource.setPosition(lengthInSeconds - 0.01);
+                lastManualJumpTime = now; // remember when we jumped
             }
         }
 
         lastEndClickTime = now;
-
     }
     else if (button == &muteButton) {
         if (!isMuted)
@@ -385,7 +435,15 @@ void Player::buttonClicked(juce::Button* button)
         juce::File sessionFile = juce::File::getSpecialLocation(
             juce::File::userApplicationDataDirectory).getChildFile("last_session.txt");
         sessionFile.replaceWithText("CLEARED");
+    }else if (button == &shuffleButton)
+    {
+        isShuffling =  !isShuffling;
+        shuffleButton.setButtonText(isShuffling ? "Shuffled" : "Shuffle");
+        if (isShuffling && playlistFiles.size() > 1)
+            buildShuffle();// fresh shuffle when turning on
+            startShuffle(currentTrackIndex);
     }
+
 }
 void Player::sliderValueChanged(juce::Slider* slider)
 {
@@ -436,6 +494,11 @@ void Player::loadPlaylistFiles(const juce::Array<juce::File>& files)
 
     // Switch to first track
     selectTrack(currentTrackIndex);
+    if (isShuffling && playlistFiles.size() > 1) {
+        startShuffle(currentTrackIndex);
+        buildShuffle();
+    }
+
 }
 void Player::timerCallback()
 {
@@ -457,6 +520,29 @@ void Player::timerCallback()
             pos = transportSource.getCurrentPosition();
             repeatedTimes--;
         }
+        double eps = 0.05; // tolerance for float comparison
+
+        // auto-advance only if we are not manually at the end
+        if (!is_restartLoop && !isLooping && lengthInSeconds > 0.0 && pos >= lengthInSeconds - eps)
+        {
+            auto now = juce::Time::getMillisecondCounter();
+            if (!hasTriggeredNext && now - lastManualJumpTime > 800) // wait 800 ms after manual jump
+            {
+                int nextIndex = -1;
+
+                if (isShuffling && playlistFiles.size() > 1)
+                    nextIndex = nextShuffledIndex();
+                else if (currentTrackIndex + 1 < playlistFiles.size())
+                    nextIndex = currentTrackIndex + 1;
+
+                if (nextIndex >= 0)
+                    selectTrack(nextIndex);
+
+                hasTriggeredNext = true;
+            }
+        }
+
+
         // update the GUI time slider
         timeSlider.setValue(pos, juce::dontSendNotification);
         repaint();
@@ -527,6 +613,7 @@ void Player::selectTrack(int index)
         transportSource.start();
     }
     currentTrackIndex = index;
+
     playlistBox.setSelectedId(index + 1, juce::dontSendNotification);
 }
 void Player::saveLast()
@@ -571,3 +658,5 @@ void Player::loadLast()
         }
     }
 }
+
+
