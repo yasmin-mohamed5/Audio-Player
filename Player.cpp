@@ -107,7 +107,19 @@ void Player::paint(juce::Graphics& g)
     else {
         g.fillAll(juce::Colours::darkgrey);
     }
-
+    // song name color & text label color
+    if (theme) {
+        metadataLable.setColour(juce::Label::textColourId, juce::Colours::black);
+        speedLabel.setColour(juce::Label::textColourId, juce::Colours::black);
+        volumeLabel.setColour(juce::Label::textColourId, juce::Colours::black);
+        positionLabel.setColour(juce::Label::textColourId, juce::Colours::black);
+    }
+    else {
+        metadataLable.setColour(juce::Label::textColourId, juce::Colours::white);
+        speedLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+        volumeLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+        positionLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    }
 
     double total = thumbnail.getTotalLength();
 
@@ -122,19 +134,7 @@ void Player::paint(juce::Graphics& g)
         else {
             g.setColour(juce::Colours::darkblue);
         }
-        // song name color & text label color
-        if (theme) {
-            metadataLable.setColour(juce::Label::textColourId, juce::Colours::black);
-            speedLabel.setColour(juce::Label::textColourId, juce::Colours::black);
-            volumeLabel.setColour(juce::Label::textColourId, juce::Colours::black);
-            positionLabel.setColour(juce::Label::textColourId, juce::Colours::black);
-        }
-        else {
-            metadataLable.setColour(juce::Label::textColourId, juce::Colours::white);
-            speedLabel.setColour(juce::Label::textColourId, juce::Colours::white);
-            volumeLabel.setColour(juce::Label::textColourId, juce::Colours::white);
-            positionLabel.setColour(juce::Label::textColourId, juce::Colours::white);
-        }
+
         // draw only channel 0 (single waveform)
         thumbnail.drawChannel(g, waveformArea, 0.0, total, 0, 0.8f);
 
@@ -177,6 +177,19 @@ void Player::paint(juce::Graphics& g)
     }
     else
     {
+        // song name color & text label color
+        if (theme) {
+            metadataLable.setColour(juce::Label::textColourId, juce::Colours::black);
+            speedLabel.setColour(juce::Label::textColourId, juce::Colours::black);
+            volumeLabel.setColour(juce::Label::textColourId, juce::Colours::black);
+            positionLabel.setColour(juce::Label::textColourId, juce::Colours::black);
+        }
+        else {
+            metadataLable.setColour(juce::Label::textColourId, juce::Colours::white);
+            speedLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+            volumeLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+            positionLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+        }
         // waveform area color
         if (theme) {
             g.setColour(juce::Colours::deepskyblue);
