@@ -34,6 +34,7 @@ public:
     // Time
     void timerCallback() override;
 
+
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
     void loadPlaylistFiles(const juce::Array<juce::File>& files);
 
@@ -55,9 +56,9 @@ public:
 private:
     
 
-    juce::AudioThumbnail thumbnail{ 512, formatManager, thumbnailCache };
+    //juce::AudioThumbnail thumbnail{ 512, formatManager, thumbnailCache };
     // Audio
-    juce::AudioFormatManager formatManager;
+    /*juce::AudioFormatManager formatManager;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
     juce::AudioTransportSource transportSource;
     juce::ResamplingAudioSource resampleSource{ &transportSource, false, 2 };
@@ -67,21 +68,22 @@ private:
     juce::Array<juce::File> playlistFiles;
     int currentTrackIndex = -1;
     int lastStartClickTime = 0;
-    int lastEndClickTime = 0;
+    int lastEndClickTime = 0;*/
 
-    vector <double> marks; //
+    //vector <double> marks; //
     int order;
     double startPoint, endPoint;
-    bool isLooping, theme; //theme
+    bool isLooping; //theme
     bool is_restartLoop;
     int repeatedTimes;
     bool isMuted;
     float previousGain;
 
 
-    juce::Array<juce::File> playlistFiles;
+    /*juce::Array<juce::File> playlistFiles;*/
+
     int currentTrackIndex = -1;
-    void loadPlaylistFiles(const juce::Array<juce::File>& files);
+
     void selectTrack(int index);
     bool pinned;
     bool cleared;

@@ -1,9 +1,7 @@
 ﻿#pragma once
 
 #include <JuceHeader.h>
-#include"Player.h"
-
-class player;
+#include <vector>
 
 
 class MainComponent : public juce::Button::Listener,
@@ -60,11 +58,31 @@ protected:
     juce::Label positionLabel;
     juce::Label volumeLabel;
 
-private:
+  
 
-    Player player;
+    juce::AudioTransportSource transportSource;
+    juce::ResamplingAudioSource resampleSource{ &transportSource, false, 2 };
+
+    juce::AudioFormatManager formatManager;
+    std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
 
     juce::AudioThumbnailCache thumbnailCache{ 10 };
+    juce::AudioThumbnail thumbnail{ 512, formatManager, thumbnailCache };
+
+    juce::Array<juce::File> playlistFiles;
+    int currentTrackIndex;
+    int lastStartClickTime;
+    int lastEndClickTime;
+
+    std::vector<double> marks; // marker times used by paint()
+    bool theme;        // UI theme flag used by paint()
+
+
+private:
+
+  //Player player;
+
+
 
     //void loadTrack(const juce::File& file);
     std::unique_ptr<juce::FileChooser> fileChooser;

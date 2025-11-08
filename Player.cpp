@@ -21,7 +21,7 @@ Player::Player()
     endPoint = 0.0;
     repeatedTimes = -1;
     order = -1;
-    theme = false;
+    
     cleared = false;
     isMuted = false;
     pinned = true;

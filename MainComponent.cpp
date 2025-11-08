@@ -58,6 +58,10 @@ MainComponent::MainComponent()
     volumeLabel.setColour(juce::Label::textColourId, juce::Colours::white);
     positionLabel.setColour(juce::Label::textColourId, juce::Colours::white);
 
+    theme = false;
+    currentTrackIndex = -1;
+    lastStartClickTime = 0;
+    lastEndClickTime = 0;
 }
 
 MainComponent::~MainComponent()
@@ -69,14 +73,14 @@ MainComponent::~MainComponent()
 void MainComponent::paint(juce::Graphics& g)
 {
     // background color
-    if (player.theme) {
+    if (theme) {
         g.fillAll(juce::Colours::lightgrey);
     }
     else {
         g.fillAll(juce::Colours::darkgrey);
     }
     // song name color & text label color
-    if (player.theme) {
+    if (theme) {
         metadataLable.setColour(juce::Label::textColourId, juce::Colours::black);
         speedLabel.setColour(juce::Label::textColourId, juce::Colours::black);
         volumeLabel.setColour(juce::Label::textColourId, juce::Colours::black);
@@ -89,14 +93,14 @@ void MainComponent::paint(juce::Graphics& g)
         positionLabel.setColour(juce::Label::textColourId, juce::Colours::white);
     }
 
-    double total = player.thumbnail.getTotalLength();
+    double total = thumbnail.getTotalLength();
 
     juce::Rectangle<int> waveformArea(20, 340, getWidth() - 40, 100);
 
     if (total > 0.0)
     {
         // waveform color
-        if (player.theme) {
+        if (theme) {
             g.setColour(juce::Colours::deepskyblue);
         }
         else {
@@ -104,20 +108,20 @@ void MainComponent::paint(juce::Graphics& g)
         }
 
         // draw only channel 0 (single waveform)
-        player.thumbnail.drawChannel(g, waveformArea, 0.0, total, 0, 0.8f);
+        thumbnail.drawChannel(g, waveformArea, 0.0, total, 0, 0.8f);
 
-        double currentTime = player.transportSource.getCurrentPosition();
+        double currentTime = transportSource.getCurrentPosition();
         float x = waveformArea.getX() + (float)((currentTime / total) * waveformArea.getWidth());
 
         g.setColour(juce::Colours::black); // playhead color
         g.drawLine(x, waveformArea.getY(), x, waveformArea.getBottom(), 3.0f);
 
-        double Time = player.transportSource.getCurrentPosition();
+        double Time = transportSource.getCurrentPosition();
         int currentMinutes = (int)(Time / 60);
         int currentSeconds = (int)std::fmod(Time, 60.0);
 
 
-        double total = player.thumbnail.getTotalLength();
+        double total = thumbnail.getTotalLength();
         int totalMinutes = (int)(total / 60);
         int totalSeconds = (int)std::fmod(total, 60.0);
 
@@ -132,7 +136,7 @@ void MainComponent::paint(juce::Graphics& g)
         int textY = waveformArea.getBottom() + 5;
 
         // time text color in min:sec
-        if (player.theme) {
+        if (theme) {
             g.setColour(juce::Colours::black);
         }
         else {
@@ -146,7 +150,7 @@ void MainComponent::paint(juce::Graphics& g)
     else
     {
         // song name color & text label color
-        if (player.theme) {
+        if (theme) {
             metadataLable.setColour(juce::Label::textColourId, juce::Colours::black);
             speedLabel.setColour(juce::Label::textColourId, juce::Colours::black);
             volumeLabel.setColour(juce::Label::textColourId, juce::Colours::black);
@@ -159,7 +163,7 @@ void MainComponent::paint(juce::Graphics& g)
             positionLabel.setColour(juce::Label::textColourId, juce::Colours::white);
         }
         // waveform area color
-        if (player.theme) {
+        if (theme) {
             g.setColour(juce::Colours::deepskyblue);
         }
         else {
@@ -168,7 +172,7 @@ void MainComponent::paint(juce::Graphics& g)
         g.drawRect(waveformArea, 2);
 
         // text color in waveform area before loading sound
-        if (player.theme) {
+        if (theme) {
             g.setColour(juce::Colours::black);
         }
         else {
@@ -177,14 +181,14 @@ void MainComponent::paint(juce::Graphics& g)
         g.drawText("Load the sound", waveformArea, juce::Justification::centred, false);
     }
     // draw markers
-    if (player.theme) { //marker color
+    if (theme) { //marker color
         g.setColour(juce::Colours::black);
     }
     else {
         g.setColour(juce::Colours::white);
     }
-    double lengthInSeconds = player.transportSource.getLengthInSeconds();
-    for (auto markTime : player.marks)
+    double lengthInSeconds = transportSource.getLengthInSeconds();
+    for (auto markTime : marks)
     {
 
         float x = waveformArea.getX() + (float)((markTime / lengthInSeconds) * waveformArea.getWidth());
