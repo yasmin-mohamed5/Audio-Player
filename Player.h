@@ -17,7 +17,6 @@ public:
 
     Player();
     ~Player() override;
-	// made functions public for easier access in MainComponent
 
      // Event handlers
     void buttonClicked(juce::Button* button) override;
@@ -41,8 +40,8 @@ public:
     void saveLast();
     void loadLast();
 
-    juce::AudioTransportSource& getTransportSource(); //
-    juce::AudioThumbnail& getThumbnail(); //
+    juce::AudioTransportSource& getTransportSource(); 
+    juce::AudioThumbnail& getThumbnail(); 
     juce::AudioFormatManager& getFormatManager();
     juce::AudioSource* getAudioSource();
 
@@ -56,31 +55,15 @@ public:
 private:
     
 
-    //juce::AudioThumbnail thumbnail{ 512, formatManager, thumbnailCache };
-    // Audio
-    /*juce::AudioFormatManager formatManager;
-    std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
-    juce::AudioTransportSource transportSource;
-    juce::ResamplingAudioSource resampleSource{ &transportSource, false, 2 };
-    juce::AudioThumbnailCache thumbnailCache{ 10 };
-    juce::AudioThumbnail thumbnail{ 512, formatManager, thumbnailCache };
-
-    juce::Array<juce::File> playlistFiles;
-    int currentTrackIndex = -1;
-    int lastStartClickTime = 0;
-    int lastEndClickTime = 0;*/
-
-    //vector <double> marks; //
+    
     int order;
     double startPoint, endPoint;
-    bool isLooping; //theme
+    bool isLooping; 
     bool is_restartLoop;
     int repeatedTimes;
     bool isMuted;
     float previousGain;
 
-
-    /*juce::Array<juce::File> playlistFiles;*/
 
     int currentTrackIndex = -1;
 
