@@ -1,26 +1,29 @@
 #pragma once
 #include <JuceHeader.h>
+#include"MainComponent.h"
 #include<vector>
 using namespace std;
 
-class Player : public juce::AudioAppComponent,
-    public juce::Button::Listener,
-    public juce::Slider::Listener,
+
+class Player : public MainComponent,
     public juce::Timer,
     public juce::ChangeListener,
     public juce::ComboBox::Listener
+    
 {
 public:
+
+
+
     Player();
     ~Player() override;
+	// made functions public for easier access in MainComponent
 
-    void paint(juce::Graphics& g) override;
-    void resized() override;
-
-    // Event handlers
+     // Event handlers
     void buttonClicked(juce::Button* button) override;
     void sliderValueChanged(juce::Slider* slider) override;
     void comboBoxChanged(juce::ComboBox* comboBox) override;
+
 
     // Audio control
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
@@ -32,69 +35,58 @@ public:
     void timerCallback() override;
 
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
+    void loadPlaylistFiles(const juce::Array<juce::File>& files);
+
+    void saveLast();
+    void loadLast();
+
+    juce::AudioTransportSource& getTransportSource(); //
+    juce::AudioThumbnail& getThumbnail(); //
+    juce::AudioFormatManager& getFormatManager();
+    juce::AudioSource* getAudioSource();
+
+    double getStartPoint() const;
+    double getEndPoint() const;
+    bool isLoopingEnabled() const;
+    int getRepeatedTimes() const;
+    void resetLoop();
+
+
 private:
+    
+
+    juce::AudioThumbnail thumbnail{ 512, formatManager, thumbnailCache };
     // Audio
     juce::AudioFormatManager formatManager;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
     juce::AudioTransportSource transportSource;
     juce::ResamplingAudioSource resampleSource{ &transportSource, false, 2 };
+    juce::AudioThumbnailCache thumbnailCache{ 10 };
+    juce::AudioThumbnail thumbnail{ 512, formatManager, thumbnailCache };
 
-
-    // GUI
-    juce::TextButton loadButton{ "Load" };
-    juce::TextButton playButton{ "Play |>" };
-    juce::TextButton pauseButton{ "Pause ||" };
-    juce::TextButton restartButton{ "Restart" };
-    juce::TextButton startButton{ "|<|" };
-    juce::TextButton endButton{ "|>|" };
-    juce::TextButton stopButton{ "Stop" };
-    juce::TextButton loopButton{ "Loop" };
-    juce::TextButton muteButton{ "Mute" };
-    juce::TextButton loopStartEndButton{ "Values to loop" };
-    juce::TextButton loadPlaylistButton{ "Load playlist" };
-    juce::TextButton markerButton{ "Add Marker" };
-    juce::TextButton getmarkerButton{ "Get Marker" };
-    juce::TextButton forwardButton{ " +10s" };
-    juce::TextButton backwardButton{ " -10s" };
-    juce::TextButton pinnButton{ "pin" };
-    juce::TextButton favoriteButton{ "Add to Fav" };
-    juce::TextButton themeButton{ "Dark" };
-    juce::TextButton clearButton{ " Clear" };
-    juce::TextEditor setMarker;
-    juce::TextEditor setStart;
-    juce::TextEditor setEnd;
-    juce::TextEditor repeat_times;
-
+    juce::Array<juce::File> playlistFiles;
+    int currentTrackIndex = -1;
     int lastStartClickTime = 0;
     int lastEndClickTime = 0;
 
-    vector <double> marks;
+    vector <double> marks; //
     int order;
-
-    juce::Label speedLabel;
-    juce::Label positionLabel;
-    juce::Label volumeLabel;
     double startPoint, endPoint;
-    bool isLooping, theme;
+    bool isLooping, theme; //theme
     bool is_restartLoop;
     int repeatedTimes;
-    bool isMuted = false;
-    float previousGain = 0.5f;
-    juce::Slider volumeSlider;
-    juce::Slider timeSlider;
-    juce::Slider speedSlider;
-    juce::Label metadataLable;
-    juce::AudioThumbnailCache thumbnailCache{ 10 };
-    juce::AudioThumbnail thumbnail{ 512, formatManager, thumbnailCache };
-    juce::ComboBox playlistBox;
+    bool isMuted;
+    float previousGain;
+
+
     juce::Array<juce::File> playlistFiles;
     int currentTrackIndex = -1;
     void loadPlaylistFiles(const juce::Array<juce::File>& files);
     void selectTrack(int index);
-    void saveLast();
-    void loadLast();
-    bool pinned = true;
-    bool cleared = false;
+    bool pinned;
+    bool cleared;
+
+    friend class MainComponent;
 
     std::unique_ptr<juce::FileChooser> fileChooser;
 

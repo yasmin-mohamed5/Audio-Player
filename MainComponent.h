@@ -1,44 +1,70 @@
 ﻿#pragma once
 
 #include <JuceHeader.h>
-#include <vector>
+#include"Player.h"
 
-class MainComponent : public juce::AudioAppComponent,
-                      public juce::Button::Listener,
-                      public juce::Slider::Listener
+class player;
+
+
+class MainComponent : public juce::Button::Listener,
+    public juce::Slider::Listener,
+    public juce::AudioAppComponent
 {
 public:
     MainComponent();
     ~MainComponent() override;
 
-    // Audio
-    void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
-    void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override;
-    void releaseResources() override;
 
+
+   
     // GUI
     void paint(juce::Graphics& g) override;
     void resized() override;
 
-    // Event handlers
-    void buttonClicked(juce::Button* button) override;
-    void sliderValueChanged(juce::Slider* slider) override;
 
-private:
-    // Audio
-    juce::AudioFormatManager formatManager;
-    std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
-    juce::AudioTransportSource transportSource;
-
-    // GUI Controls
+protected:
+    // GUI
     juce::TextButton loadButton{ "Load" };
-    juce::TextButton playButton{ "Play ►" };
+    juce::TextButton playButton{ "Play |>" };
     juce::TextButton pauseButton{ "Pause ||" };
     juce::TextButton restartButton{ "Restart" };
-    juce::TextButton startButton{ "|◄" };
-    juce::TextButton endButton{ "►|" };
+    juce::TextButton startButton{ "|<|" };
+    juce::TextButton endButton{ "|>|" };
     juce::TextButton stopButton{ "Stop" };
+    juce::TextButton loopButton{ "Loop" };
+    juce::TextButton muteButton{ "Mute" };
+    juce::TextButton loopStartEndButton{ "Values to loop" };
+    juce::TextButton loadPlaylistButton{ "Load playlist" };
+    juce::TextButton markerButton{ "Add Marker" };
+    juce::TextButton getmarkerButton{ "Get Marker" };
+    juce::TextButton forwardButton{ " +10s" };
+    juce::TextButton backwardButton{ " -10s" };
+    juce::TextButton pinnButton{ "pin" };
+    juce::TextButton favoriteButton{ "Add to Fav" };
+    juce::TextButton themeButton{ "Dark" };
+    juce::TextButton clearButton{ " Clear" };
+
+    juce::ComboBox playlistBox;
+
+    juce::TextEditor setMarker;
+    juce::TextEditor setStart;
+    juce::TextEditor setEnd;
+    juce::TextEditor repeat_times;
+
     juce::Slider volumeSlider;
+    juce::Slider timeSlider;
+    juce::Slider speedSlider;
+    juce::Label metadataLable;
+
+    juce::Label speedLabel;
+    juce::Label positionLabel;
+    juce::Label volumeLabel;
+
+private:
+
+    Player player;
+
+    juce::AudioThumbnailCache thumbnailCache{ 10 };
 
     //void loadTrack(const juce::File& file);
     std::unique_ptr<juce::FileChooser> fileChooser;
