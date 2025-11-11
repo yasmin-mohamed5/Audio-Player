@@ -42,9 +42,7 @@ protected:
     juce::TextButton themeButton{ "Dark" };
     juce::TextButton clearButton{ " Clear" };
     juce::TextButton shuffleButton{ "Shuffle" }; // add to the GUI init list
-    bool isShuffling = false;
-    std::vector<int> shuffleOrder;
-    size_t shufflePosition = 0;
+    std::vector<double> marks;
     juce::ComboBox playlistBox;
 
     juce::TextEditor setMarker;
@@ -77,7 +75,7 @@ protected:
     int lastStartClickTime;
     int lastEndClickTime;
 
-    std::vector<double> marks; // marker times used by paint()
+
     bool theme;        // UI theme flag used by paint()
 
 

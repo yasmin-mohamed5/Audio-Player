@@ -1,7 +1,5 @@
 #include"Player.h"
 #include <random>
-#include <algorithm>
-
 
 Player::Player()
 {
@@ -13,7 +11,7 @@ Player::Player()
     playlistBox.addListener(this); // listen for selection change
     thumbnail.addChangeListener(this);
     formatManager.registerBasicFormats();
-    previousGain = 0.5f;
+    previous = 0.5f;
     startTimer(200);//each 200 ms
     setAudioChannels(0, 2);
 
@@ -23,10 +21,13 @@ Player::Player()
     endPoint = 0.0;
     repeatedTimes = -1;
     order = -1;
-    
+    nextsong= false ;
+    JumpTime = 0;
     cleared = false;
     isMuted = false;
     pinned = true;
+    isShuffling= false;
+    shufflePosition = 0;
     loadLast();
 }
 
@@ -36,20 +37,20 @@ Player::~Player() {
     saveLast();
 }
 
-#include <random> // at top of Player.cpp
-
 void Player::buildShuffle()
 {
     shuffleOrder.clear();
     int n = playlistFiles.size();
     if (n == 0) return;
     shuffleOrder.reserve(n);
-    for (int i = 0; i < n; ++i) shuffleOrder.push_back(i);
+    for (int i = 0; i < n; ++i) {
+        shuffleOrder.push_back(i);
+    }
 
-    // Shuffle using std::shuffle + random_device
+    // Shuffle using shuffle + random_device
     random_device rd;
-    mt19937 g(rd());
-    shuffle(shuffleOrder.begin(), shuffleOrder.end(), g);
+    mt19937 gen(rd());
+    shuffle(shuffleOrder.begin(), shuffleOrder.end(), gen);
 
     // Ensure the currently playing track is placed at current position
     if (currentTrackIndex >= 0)
@@ -67,14 +68,16 @@ void Player::startShuffle(int index)
             return;
         }
     }
-    // If not found (rare), set position to 0
+    // If not found , set position to 0
     shufflePosition = 0;
 }
 
 int Player::nextShuffledIndex()
 {
-    if (shuffleOrder.empty()) return -1;
-    // advance position (wrap)
+    if (shuffleOrder.empty()) {
+        return -1;
+    }
+    // (wrap)
     shufflePosition = (shufflePosition + 1) % shuffleOrder.size();
     return shuffleOrder[shufflePosition];
 }
@@ -219,16 +222,18 @@ void Player::buttonClicked(juce::Button* button)
     else if (button == &endButton) {
         auto now = juce::Time::getMillisecondCounter();
 
-        if (now - lastEndClickTime < 500) // double click: next track
+        if (now - lastEndClickTime < 1000) // double click: next track
         {
             int nextIndex = -1;
-            if (isShuffling && playlistFiles.size() > 1)
+            if (isShuffling && playlistFiles.size() > 1) {
                 nextIndex = nextShuffledIndex();
-            else if (currentTrackIndex + 1 < playlistFiles.size())
+            }
+            else if (currentTrackIndex + 1 < playlistFiles.size()) {
                 nextIndex = currentTrackIndex + 1;
-
-            if (nextIndex >= 0)
+            }
+            if (nextIndex >= 0) {
                 selectTrack(nextIndex);
+            }
         }
         else // single click: go to end of current track
         {
@@ -236,7 +241,7 @@ void Player::buttonClicked(juce::Button* button)
             {
                 double lengthInSeconds = transportSource.getLengthInSeconds();
                 transportSource.setPosition(lengthInSeconds - 0.01);
-                lastManualJumpTime = now; // remember when we jumped
+                JumpTime = now; // remember when we jumped
             }
         }
 
@@ -245,16 +250,15 @@ void Player::buttonClicked(juce::Button* button)
     else if (button == &muteButton) {
         if (!isMuted)
         {
-            previousGain = (float)volumeSlider.getValue();
+            previous= (float)volumeSlider.getValue();
             transportSource.setGain(0.0f);
             volumeSlider.setValue(0.0, juce::dontSendNotification);
             isMuted = true;
             muteButton.setButtonText("Unmute");
-            DBG("Muted, previousGain=" << previousGain);
         }
         else {
-            transportSource.setGain(previousGain);
-            volumeSlider.setValue(previousGain, juce::dontSendNotification);
+            transportSource.setGain(previous);
+            volumeSlider.setValue(previous, juce::dontSendNotification);
             isMuted = false;
             muteButton.setButtonText("Mute");
         }
@@ -458,7 +462,7 @@ void Player::sliderValueChanged(juce::Slider* slider)
         transportSource.setGain(v);
 
         if (v > 0.001f) {
-            previousGain = v;
+            previous = v;
             isMuted = false;
             muteButton.setButtonText("Mute");
         }
@@ -519,41 +523,42 @@ void Player::timerCallback()
             pos = transportSource.getCurrentPosition();
         }
         // start end loop
-        if (isLooping && repeatedTimes && (pos >= endPoint - 0.001 || pos <= startPoint)) { // to avoid cut the last second
+        if (isLooping && repeatedTimes && (pos >= endPoint - 0.001 || pos < startPoint)) { // to avoid cut the last second
 
             transportSource.setPosition(startPoint);
             transportSource.start();
             pos = transportSource.getCurrentPosition();
             repeatedTimes--;
         }
-        double eps = 0.05; // tolerance for float comparison
 
-        // auto-advance only if we are not manually at the end
-        if (!is_restartLoop && !isLooping && lengthInSeconds > 0.0 && pos >= lengthInSeconds - eps)
+
+        // auto-played only if we are not manually at the end
+        if (!is_restartLoop && !isLooping && lengthInSeconds > 0.0 && pos >= lengthInSeconds - 0.05)
         {
             auto now = juce::Time::getMillisecondCounter();
-            if (!hasTriggeredNext && now - lastManualJumpTime > 800) // wait 800 ms after manual jump
+            if (!nextsong && now - JumpTime > 800) // wait 800 ms after manual jump
             {
                 int nextIndex = -1;
 
-                if (isShuffling && playlistFiles.size() > 1)
+                if (isShuffling && playlistFiles.size() > 1) {
                     nextIndex = nextShuffledIndex();
-                else if (currentTrackIndex + 1 < playlistFiles.size())
+                }
+                else if (currentTrackIndex + 1 < playlistFiles.size()) {
                     nextIndex = currentTrackIndex + 1;
-
-                if (nextIndex >= 0)
+                }
+                if (nextIndex >= 0) {
                     selectTrack(nextIndex);
-
-                hasTriggeredNext = true;
+                }
+                nextsong = true;
             }
         }
-
 
         // update the GUI time slider
         timeSlider.setValue(pos, juce::dontSendNotification);
         repaint();
     }
 }
+// draw the wave
 void Player::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
     if (source == &thumbnail)
