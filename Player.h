@@ -12,8 +12,6 @@ class Player : public MainComponent,
 {
 public:
 
-
-
     Player();
     ~Player() override;
 
@@ -52,26 +50,26 @@ public:
     bool isLoopingEnabled() const;
     int getRepeatedTimes() const;
     void resetLoop();
-    bool hasTriggeredNext = false;
 
-    // in Player.h
-    uint32 lastManualJumpTime = 0; // new
 
 
 
 private:
     
 
-
+    bool nextsong ;
+    int JumpTime ;
     int order;
     double startPoint, endPoint;
     bool isLooping;
     bool is_restartLoop;
     int repeatedTimes;
     bool isMuted;
-    float previousGain;
-
-
+    float previous;
+    std::vector<int> shuffleOrder;
+    bool isShuffling ;
+    int  shufflePosition;
+     // marker times used by paint()
     int currentTrackIndex = -1;
     void selectTrack(int index);
     bool pinned;
